@@ -22,6 +22,8 @@ class ProofPageTest extends TestCase
 
     public function test_proof_page_links_the_repository_only_when_configured(): void
     {
+        config()->set('rescue_lab.repository_url', null);
+
         $this->get('/proof')->assertDontSee('>GitHub</a>', false);
 
         config()->set('rescue_lab.repository_url', 'https://github.com/example/rescue-lab');

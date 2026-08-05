@@ -1,4 +1,4 @@
-.PHONY: demo reset simulate reconcile test video
+.PHONY: demo reset simulate reconcile test video proof-assets
 
 .env:
 	cp .env.example .env
@@ -25,8 +25,8 @@ reconcile:
 
 test:
 	./vendor/bin/sail pint --test
-	./vendor/bin/sail test
 	./vendor/bin/sail npm run build
+	./vendor/bin/sail test
 	./vendor/bin/sail artisan cache:clear
 	./vendor/bin/sail npm run test:e2e
 
@@ -34,3 +34,7 @@ video: demo
 	./vendor/bin/sail artisan cache:clear
 	./vendor/bin/sail npm run record:demo
 	./vendor/bin/sail artisan lab:reset
+
+proof-assets:
+	./vendor/bin/sail npm run build
+	./vendor/bin/sail npm run capture:proof

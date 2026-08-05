@@ -12,8 +12,6 @@ class GuidedDemoController extends Controller
 {
     public function start(Request $request, GuidedDemoService $guide, DashboardService $dashboard): JsonResponse
     {
-        abort_unless(app()->environment(['local', 'testing']), 404);
-
         $user = $request->user();
         $guide->start($user->workspace);
 
@@ -26,8 +24,6 @@ class GuidedDemoController extends Controller
 
     public function advance(Request $request, GuidedDemoService $guide, DashboardService $dashboard): JsonResponse
     {
-        abort_unless(app()->environment(['local', 'testing']), 404);
-
         $user = $request->user();
         $result = $guide->advance($user->workspace, $user);
 

@@ -1,0 +1,12 @@
+changelog:
+  categories:
+    - title: Security and reliability
+      labels: [security, reliability]
+    - title: Product evidence
+      labels: [enhancement, evidence]
+    - title: Documentation
+      labels: [documentation]
+    - title: Maintenance
+      labels: [dependencies, maintenance]
+    - title: Other changes
+      labels: ["*"]

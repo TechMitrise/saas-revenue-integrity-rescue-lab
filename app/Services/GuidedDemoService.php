@@ -209,6 +209,7 @@ class GuidedDemoService
         ];
 
         return [
+            'enabled' => (bool) config('rescue_lab.demo_mutations_enabled'),
             'active' => (bool) $active,
             'completed' => $completed,
             'total' => count($steps),

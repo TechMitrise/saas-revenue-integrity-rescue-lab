@@ -1,0 +1,51 @@
+name: Bug report
+description: Report a reproducible defect in the synthetic rescue lab.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Do not include secrets or real customer, billing or incident data.
+  - type: textarea
+    id: behaviour
+    attributes:
+      label: Observed behaviour
+      description: What happened, and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Provide the smallest synthetic sequence or command that reproduces the issue.
+      placeholder: make reset, open /app, then...
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Surface
+      options:
+        - Guided live incident
+        - Webhook ingestion
+        - Queue provisioning
+        - Incident detection
+        - Reconciliation
+        - Proof page
+        - Setup or CI
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include OS, Docker version and browser when relevant.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Safety checks
+      options:
+        - label: I used synthetic data only.
+          required: true
+        - label: This report contains no credentials or security exploit details.
+          required: true

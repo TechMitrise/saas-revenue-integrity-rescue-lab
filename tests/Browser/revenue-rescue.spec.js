@@ -1,5 +1,20 @@
 import { expect, test } from '@playwright/test';
 
+test('public proof page explains the rescue and opens the working lab', async ({ page }) => {
+    await page.goto('/proof');
+
+    await expect(page.getByRole('heading', { name: /Revenue leaks rarely start at checkout/ })).toBeVisible();
+    await expect(page.locator('.incident-artifact')).toContainText('Northstar Labs');
+    await expect(page.locator('.incident-artifact')).toContainText('$4,800');
+    await expect(page.locator('.proof-ledger')).toContainText('10');
+    await expect(page.locator('.evidence-table')).toContainText('ReconciliationService.php');
+    await expect(page.getByText('At-least-once delivery / Effectively-once business effect')).toBeVisible();
+
+    await page.getByRole('link', { name: /Run the 8-action rescue/ }).click();
+    await expect(page).toHaveURL(/\/login$/);
+    await expect(page.getByRole('heading', { name: 'Enter the lab.' })).toBeVisible();
+});
+
 test('operator traces, repairs, verifies and compares the paid-access rescue', async ({ page }) => {
     await page.goto('/login');
     await expect(page.getByRole('heading', { name: 'Enter the lab.' })).toBeVisible();

@@ -270,6 +270,23 @@ class PaidAccessRescueTest extends TestCase
         $this->assertSame('recovered', $incident->fresh()->status);
     }
 
+    public function test_demo_mutations_can_be_disabled_for_a_read_only_deployment(): void
+    {
+        config()->set('rescue_lab.demo_mutations_enabled', false);
+
+        $this->actingAs($this->user)
+            ->postJson('/api/demo/guided/start')
+            ->assertNotFound();
+        $this->postJson('/api/demo/reset')->assertNotFound();
+        $incident = Incident::query()->where('workspace_id', $this->workspace->id)->firstOrFail();
+        $this->postJson("/api/incidents/{$incident->id}/reconcile")->assertNotFound();
+        $this->postJson('/api/audits')->assertNotFound();
+        $this->postJson('/api/webhooks/synthetic-pay')->assertNotFound();
+        $this->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonPath('guide.enabled', false);
+    }
+
     private function labRun(string $mode): LabRun
     {
         return LabRun::query()

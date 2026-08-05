@@ -10,8 +10,9 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
-Route::redirect('/', '/app');
-Route::post('/api/webhooks/synthetic-pay', [WebhookController::class, 'store']);
+Route::redirect('/', '/proof');
+Route::view('/proof', 'proof')->name('proof');
+Route::post('/api/webhooks/synthetic-pay', [WebhookController::class, 'store'])->middleware('demo.mutations');
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
@@ -24,10 +25,13 @@ Route::middleware('auth')->group(function (): void {
 
     Route::prefix('api')->group(function (): void {
         Route::get('/dashboard', DashboardDataController::class);
-        Route::post('/audits', [AuditController::class, 'store']);
-        Route::post('/incidents/{incident}/reconcile', [ReconciliationController::class, 'store']);
-        Route::post('/demo/reset', DemoResetController::class);
-        Route::post('/demo/guided/start', [GuidedDemoController::class, 'start']);
-        Route::post('/demo/guided/advance', [GuidedDemoController::class, 'advance']);
+
+        Route::middleware('demo.mutations')->group(function (): void {
+            Route::post('/audits', [AuditController::class, 'store']);
+            Route::post('/incidents/{incident}/reconcile', [ReconciliationController::class, 'store']);
+            Route::post('/demo/reset', DemoResetController::class);
+            Route::post('/demo/guided/start', [GuidedDemoController::class, 'start']);
+            Route::post('/demo/guided/advance', [GuidedDemoController::class, 'advance']);
+        });
     });
 });

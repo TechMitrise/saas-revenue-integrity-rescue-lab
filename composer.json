@@ -1,9 +1,9 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "rescue-lab/saas-revenue-integrity-rescue-lab",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "Executable Laravel proof of paid-but-locked detection, duplicate-safe event handling and safe entitlement reconciliation.",
+    "keywords": ["laravel", "saas", "webhooks", "idempotency", "revenue-integrity", "legacy-modernization"],
     "license": "MIT",
     "require": {
         "php": "^8.3",

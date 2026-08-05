@@ -48,10 +48,12 @@ if (root) {
         ];
 
         document.querySelector('#guide-progress').textContent = `${guide.completed} / ${guide.total} actions completed`;
-        document.querySelector('#guide-status').textContent = guide.complete ? 'Evidence complete' : guide.active ? 'Incident running' : 'Ready to replay';
+        document.querySelector('#guide-status').textContent = !guide.enabled ? 'Read-only evidence' : guide.complete ? 'Evidence complete' : guide.active ? 'Incident running' : 'Ready to replay';
         document.querySelector('#guide-status').className = guide.complete ? 'complete' : guide.active ? 'running' : '';
-        document.querySelector('#guide-summary').textContent = guide.complete ? 'Recovery is safe, evidenced, and repeatable.' : guide.nextLabel;
-        document.querySelector('#guide-explanation').textContent = guide.complete
+        document.querySelector('#guide-summary').textContent = !guide.enabled ? 'Interactive replay is disabled on this deployment.' : guide.complete ? 'Recovery is safe, evidenced, and repeatable.' : guide.nextLabel;
+        document.querySelector('#guide-explanation').textContent = !guide.enabled
+            ? 'Inspect the completed evidence tabs below, or run the repository locally to perform every synthetic action.'
+            : guide.complete
             ? 'The first reconciliation restored access once. The repeat produced a no-op and zero additional business effects.'
             : guide.active
                 ? 'Perform the next action, then inspect the observed database state before moving forward.'
@@ -65,7 +67,8 @@ if (root) {
             <div><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join('');
         document.querySelector('#guide-action').textContent = guide.nextLabel;
         document.querySelector('#guide-action').disabled = false;
-        document.querySelector('#guide-restart').hidden = !guide.active;
+        document.querySelector('#guide-action').hidden = !guide.enabled;
+        document.querySelector('#guide-restart').hidden = !guide.enabled || !guide.active;
     }
 
     function renderControlRoom() {
@@ -117,7 +120,7 @@ if (root) {
             <article class="audit-row"><span class="result-badge ${escapeHtml(action.result)}">${escapeHtml(action.result)}</span><div><strong>${escapeHtml(action.id)}</strong><p>${escapeHtml(action.reason)}</p></div><b>${action.businessEffects} effect(s)</b></article>`).join('') : '<p class="empty-copy">No reconciliation actions yet.</p>';
         const button = document.querySelector('#reconcile-button');
         button.textContent = actions.length === 0 ? 'Run safe reconciliation' : actions.some((action) => action.result === 'no_op') ? 'No-op verified' : 'Verify repeat no-op';
-        button.disabled = !dashboard.incident || actions.some((action) => action.result === 'no_op');
+        button.disabled = !dashboard.guide.enabled || !dashboard.incident || actions.some((action) => action.result === 'no_op');
     }
 
     function renderComparison() {

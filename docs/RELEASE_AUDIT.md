@@ -16,10 +16,12 @@ This audit covers the synthetic SaaS Revenue Integrity Rescue Lab only. No real 
 | Safe reconciliation | PASS | Transactional row locks, unique entitlement, immutable actions, before/after snapshots, repaired then no-op tests |
 | Accurate delivery guarantee | PASS | UI and docs state: at-least-once event delivery with an idempotent, effectively-once business effect |
 | Fragile versus stabilised evidence | PASS | Two seeded lab runs with stored delivery, attempt, query, timing, and state evidence |
-| Automated tests | PASS | 14 PHP tests / 80 assertions and 2 Playwright journeys across desktop and mobile |
+| Public proof page | PASS | `/proof`, responsive browser coverage, README capture, social preview, metadata and claim-to-code ledger |
+| Automated tests | PASS | 19 PHP tests / 143 assertions and 3 Playwright journeys across both desktop and mobile projects |
 | One-command setup | PASS | Repeated `make demo`; dependency and browser caches reused; application key hash unchanged |
+| Launch assets | PASS | `make proof-assets` reproducibly builds the README screenshot and 1280 x 640 social preview |
 | CI | PARTIAL | `.github/workflows/ci.yml` defines backend, security, build, MySQL, and browser jobs. Local-equivalent commands pass; hosted GitHub execution awaits the intentionally deferred push |
-| Security and secrets | PASS | Signed webhook, authentication, workspace scoping, CSRF exemption limited to webhook, ignored `.env`, synthetic-only template values, zero dependency advisories, no common secret patterns in tracked sources |
+| Security and secrets | PASS | Signed webhook, authentication, workspace scoping, one middleware gate for all synthetic writes, ignored `.env`, synthetic-only template values, zero dependency advisories, no common secret patterns in tracked sources |
 | Architecture | PASS | `docs/ARCHITECTURE.md` documents event, queue, entitlement, reconciliation, evidence, tenancy, and guarantee boundaries |
 | Runbook | PASS | `docs/OPERATIONS.md` covers setup, replay, verification, failed work, incident response, deployment, rollback, backup, and secrets |
 
@@ -28,8 +30,9 @@ This audit covers the synthetic SaaS Revenue Integrity Rescue Lab only. No real 
 ```text
 make demo                                           PASS (initial and repeat)
 make test                                           PASS
-./vendor/bin/sail test                              PASS: 14 tests, 80 assertions
-./vendor/bin/sail npm run test:e2e                  PASS: 2 projects
+make proof-assets                                   PASS
+./vendor/bin/sail test                              PASS: 19 tests, 143 assertions
+./vendor/bin/sail npm run test:e2e                  PASS: 6 tests across 2 projects
 ./vendor/bin/sail artisan lab:simulate              PASS: fragile 10/1/3/locked/SLA; stabilised 10/1/0/active/no SLA
 ./vendor/bin/sail artisan lab:reconcile --verify-no-op
                                                     PASS: repaired/1 effect; no_op/0 effects
@@ -40,7 +43,7 @@ make test                                           PASS
                                                     PASS
 ./vendor/bin/sail composer check-platform-reqs      PASS
 docker compose config --quiet                       PASS
-curl http://localhost:18080/app                     PASS: 302 to /login
+curl http://localhost/proof (application container) PASS: 200
 git diff --check                                    PASS
 ```
 

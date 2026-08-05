@@ -4,9 +4,17 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: rescue-lab-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   backend-and-build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     services:
       mysql:
         image: mysql:8.4
@@ -47,14 +55,15 @@ jobs:
       - run: composer validate --strict --no-check-publish
       - run: composer check-platform-reqs
       - run: vendor/bin/pint --test
-      - run: php artisan test
-      - run: composer audit --locked --no-interaction
       - run: npm ci --ignore-scripts
       - run: npm run build
+      - run: php artisan test
+      - run: composer audit --locked --no-interaction
       - run: npm audit --audit-level=low
 
   browser:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     services:
       mysql:
         image: mysql:8.4

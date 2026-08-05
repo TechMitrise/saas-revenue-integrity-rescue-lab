@@ -15,8 +15,6 @@ class DemoResetController extends Controller
         DemoScenarioSeeder $seeder,
         DashboardService $dashboard,
     ): JsonResponse {
-        abort_unless(app()->environment(['local', 'testing']), 404);
-
         $user = $request->user();
         $seeder->seed($user->workspace);
 

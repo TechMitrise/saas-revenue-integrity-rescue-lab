@@ -82,6 +82,8 @@ No production host is selected or configured. An approved deployment must provid
 - health checks for `/up`, database, cache, and worker heartbeat
 - central logs, error monitoring, queue alerts, backups, and tested restore
 
+Leave `RESCUE_LAB_DEMO_MUTATIONS_ENABLED=false` for a public read-only proof deployment. Set it to `true` only for an isolated synthetic lab where authenticated visitors are expected to replay the fixture. Never connect an interactive demonstration deployment to customer or production billing data.
+
 Deploy with immutable application artifacts, then run `php artisan migrate --force`, `php artisan horizon:terminate`, and a smoke test. Never run `migrate:fresh`, seeders, reset, or simulation commands against production data.
 
 ## Rollback

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#12231f">
+    <meta name="robots" content="noindex,nofollow">
     <title>Rescue Control Room</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -19,7 +20,7 @@
             </a>
             <div class="top-actions">
                 <span class="synthetic-chip">Synthetic lab evidence</span>
-                <button class="quiet-button" id="reset-button" type="button">Replay scenario</button>
+                <button class="quiet-button" id="reset-button" type="button" @if (! config('rescue_lab.demo_mutations_enabled')) hidden @endif>Replay scenario</button>
                 <form method="POST" action="{{ route('logout') }}">@csrf<button class="quiet-button" type="submit">Sign out</button></form>
             </div>
         </header>

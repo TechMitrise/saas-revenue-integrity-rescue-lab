@@ -12,7 +12,7 @@ Contact destination: `[INSERT CONTACT URL]`
 A successful charge can still become churn when a webhook, queue job or legacy state transition fails before the customer receives access. This controlled synthetic lab shows how Tech Mitrise detects the gap, traces the evidence, quantifies exposure, recovers safely and introduces controls that prevent recurrence.
 
 **Primary CTA:** Request a Legacy SaaS Risk Triage -> `[INSERT CONTACT URL]`  
-**Text link:** Inspect the source -> `[INSERT GITHUB URL]`
+**Text link:** Inspect the source -> `https://github.com/TechMitrise/saas-revenue-integrity-rescue-lab`
 
 Disclosure: All organisations, payments, failures, timings and revenue figures shown here are synthetic lab evidence.
 
@@ -68,7 +68,7 @@ Signatures are verified, deliveries and logical events are separated, unique ide
 
 The proof is backed by Laravel 13, PHP 8.5, MySQL 8.4, Valkey/Horizon, database uniqueness constraints, immutable reconciliation records, 148 PHP assertions and desktop/mobile Playwright journeys.
 
-**Technical source:** `[INSERT GITHUB URL]`
+**Technical source:** `https://github.com/TechMitrise/saas-revenue-integrity-rescue-lab`
 
 ## 8. Synthetic-lab disclosure
 

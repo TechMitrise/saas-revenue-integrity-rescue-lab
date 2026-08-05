@@ -11,7 +11,7 @@ Hi `[NAME]`,
 The relevant trigger from today was `[THEIR OBSERVED FAILURE OR RISK]`. The Rescue Lab showed the investigation standard: correlate payment, event, queue and customer-value state; repair once; prove the repeat is harmless.
 
 Proof: `[INSERT PROOF URL]`  
-GitHub: `[INSERT GITHUB URL]`
+GitHub: `https://github.com/TechMitrise/saas-revenue-integrity-rescue-lab`
 
 All lab data and revenue figures are synthetic. For your system, the proposed next step is a five-business-day Legacy SaaS Risk & Revenue Audit of `[SELECTED PATH]`, typically USD 1,500-3,000 after access and scope are confirmed.
 

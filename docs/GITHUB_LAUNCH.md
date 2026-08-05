@@ -1,6 +1,6 @@
 # GitHub Launch Runbook
 
-No remote or credentials are configured by this runbook. Replace every `<github-owner>` placeholder only after the destination is approved.
+The approved public destination is `https://github.com/TechMitrise/saas-revenue-integrity-rescue-lab`. Local `origin` is configured without credentials; no push or deployment has been performed.
 
 ## Repository settings
 
@@ -17,24 +17,23 @@ Upload `docs/assets/github-social-preview.png` under **Settings > General > Soci
 
 ## Repository link
 
-Set `RESCUE_LAB_REPOSITORY_URL` in the deployed environment after the repository exists so the proof page displays its GitHub link.
+The committed default for `RESCUE_LAB_REPOSITORY_URL` is `https://github.com/TechMitrise/saas-revenue-integrity-rescue-lab`, so the proof page displays the approved GitHub link. An environment-specific value may override it if the repository moves.
 
 Set `RESCUE_LAB_VIDEO_URL` to the approved 90-120-second walkthrough and `RESCUE_LAB_CONTACT_URL` to the approved Risk Triage form or scheduling page. Until those values exist, keep the visible placeholders in the WordPress copy rather than guessing destinations.
 
 Production defaults to a read-only proof page. Set `RESCUE_LAB_DEMO_MUTATIONS_ENABLED=true` only when the deployment is an isolated synthetic lab and authenticated visitors should be able to replay/reset its fixture.
 
-Verify no namespace placeholder has escaped this runbook:
+Verify the approved destination is present:
 
 ```bash
-rg -n "<github-owner>" . --glob '!docs/GITHUB_LAUNCH.md'
+rg -n "TechMitrise/saas-revenue-integrity-rescue-lab" .
 ```
 
 ## Remote and first push
 
-Run these only after credentials and the empty repository are provided:
+Run this only after Mohit authenticates locally and explicitly approves the push:
 
 ```bash
-git remote add origin git@github.com:<github-owner>/saas-revenue-integrity-rescue-lab.git
 git push -u origin main
 ```
 
@@ -50,10 +49,9 @@ No force push is required. Confirm the CI workflow passes before creating a rele
 
 ## First release
 
-After CI is green, replace the placeholder links and create an annotated release from the tested commit:
+After CI is green, publish the existing local annotated tag from the tested commit:
 
 ```bash
-git tag -a v1.0.0 -m "SaaS Revenue Integrity Rescue Lab v1.0.0"
 git push origin v1.0.0
 ```
 

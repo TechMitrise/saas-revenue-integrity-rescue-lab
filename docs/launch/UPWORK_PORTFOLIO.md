@@ -38,7 +38,7 @@ Use `public/images/rescue-lab-social.png`. Keep the text readable and do not add
 ## Proof-link placement
 
 First line after the short description: `Live proof: [INSERT PROOF URL]`  
-Final line: `Technical source: [INSERT GITHUB URL]`
+Final line: `Technical source: https://github.com/TechMitrise/saas-revenue-integrity-rescue-lab`
 
 ## CTA
 

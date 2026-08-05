@@ -36,7 +36,7 @@ This directory is the operating package for launching the SaaS Revenue Integrity
 
 1. Run `make test`, both dependency audits and `make proof-assets`.
 2. Confirm `git status --short` is empty and the local release tag points to the tested commit.
-3. Replace `<github-owner>` only after the approved GitHub namespace is known.
+3. Confirm the approved TechMitrise repository URL still resolves publicly.
 4. Push `main`, wait for both hosted CI jobs, then publish the release and social preview.
 5. Deploy `/proof` in read-only mode first. Enable synthetic demo mutations only on an isolated lab.
 6. Configure `RESCUE_LAB_REPOSITORY_URL` and `RESCUE_LAB_CONTACT_URL` on the approved host.

@@ -18,7 +18,7 @@ If this path matters at `[COMPANY]`, a five-day Legacy SaaS Risk & Revenue Audit
 
 Hi `[NAME]`, your note about `[TRIGGER]` suggests the risk may cross provider delivery, event identity, queued work and persisted entitlement state rather than sit in one handler.
 
-This synthetic Laravel lab shows my evidence standard: ten deliveries, one event/effect, three persisted job failures, correlated SLA breach, one lock-protected repair and a repeat no-op: `[INSERT GITHUB URL]`.
+This synthetic Laravel lab shows my evidence standard: ten deliveries, one event/effect, three persisted job failures, correlated SLA breach, one lock-protected repair and a repeat no-op: `https://github.com/TechMitrise/saas-revenue-integrity-rescue-lab`.
 
 Would mapping one payment-to-value path be useful before the team chooses the next patch or modernisation step?
 

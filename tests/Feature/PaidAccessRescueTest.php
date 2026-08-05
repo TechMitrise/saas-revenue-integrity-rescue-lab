@@ -209,6 +209,67 @@ class PaidAccessRescueTest extends TestCase
         $this->assertSame(1, Incident::query()->where('workspace_id', $this->workspace->id)->count());
     }
 
+    public function test_guided_demo_persists_each_incident_and_recovery_step(): void
+    {
+        $this->actingAs($this->user);
+
+        $this->postJson('/api/demo/guided/start')
+            ->assertOk()
+            ->assertJsonPath('dashboard.guide.active', true)
+            ->assertJsonPath('dashboard.guide.completed', 1)
+            ->assertJsonPath('dashboard.guide.facts.deliveries', 0)
+            ->assertJsonPath('dashboard.incident', null);
+
+        $run = LabRun::query()
+            ->where('workspace_id', $this->workspace->id)
+            ->where('mode', 'fragile')
+            ->firstOrFail();
+        $this->assertSame('payment_succeeded', $run->status);
+        $this->assertSame(0, $run->deliveries()->count());
+        $this->assertSame(0, $run->entitlements()->count());
+
+        $this->postJson('/api/demo/guided/advance')
+            ->assertOk()
+            ->assertJsonPath('dashboard.guide.completed', 2)
+            ->assertJsonPath('dashboard.guide.facts.deliveries', 10)
+            ->assertJsonPath('dashboard.guide.facts.events', 1)
+            ->assertJsonPath('dashboard.guide.facts.businessActions', 1)
+            ->assertJsonPath('dashboard.guide.facts.access', 'locked');
+        $this->assertSame(1, WebhookEvent::query()->where('lab_run_id', $run->id)->count());
+        $this->assertSame(1, Entitlement::query()->where('lab_run_id', $run->id)->count());
+
+        foreach ([1, 2, 3] as $attemptNumber) {
+            $this->postJson('/api/demo/guided/advance')
+                ->assertOk()
+                ->assertJsonPath('dashboard.guide.completed', 2 + $attemptNumber)
+                ->assertJsonPath('dashboard.guide.facts.queueFailures', $attemptNumber);
+        }
+        $this->assertSame(3, ProvisioningAttempt::query()->where('lab_run_id', $run->id)->count());
+
+        $this->postJson('/api/demo/guided/advance')
+            ->assertOk()
+            ->assertJsonPath('dashboard.guide.completed', 6)
+            ->assertJsonPath('dashboard.guide.facts.incident', 'open')
+            ->assertJsonPath('dashboard.guide.facts.revenue', 4800);
+        $incident = Incident::query()->where('lab_run_id', $run->id)->firstOrFail();
+        $this->assertSame('paid_but_locked', $incident->type);
+
+        $this->postJson('/api/demo/guided/advance')
+            ->assertOk()
+            ->assertJsonPath('dashboard.guide.completed', 7)
+            ->assertJsonPath('dashboard.guide.facts.access', 'active')
+            ->assertJsonPath('dashboard.guide.facts.lastResult', 'repaired');
+
+        $this->postJson('/api/demo/guided/advance')
+            ->assertOk()
+            ->assertJsonPath('dashboard.guide.complete', true)
+            ->assertJsonPath('dashboard.guide.completed', 8)
+            ->assertJsonPath('dashboard.guide.facts.lastResult', 'no_op');
+        $this->assertSame(2, ReconciliationAction::query()->where('lab_run_id', $run->id)->count());
+        $this->assertSame(1, (int) ReconciliationAction::query()->where('lab_run_id', $run->id)->sum('business_effects'));
+        $this->assertSame('recovered', $incident->fresh()->status);
+    }
+
     private function labRun(string $mode): LabRun
     {
         return LabRun::query()

@@ -10,6 +10,8 @@ use Illuminate\Support\Collection;
 
 class DashboardService
 {
+    public function __construct(private readonly GuidedDemoService $guided) {}
+
     /** @return array<string, mixed> */
     public function for(Workspace $workspace): array
     {
@@ -29,6 +31,7 @@ class DashboardService
             'workspace' => ['name' => $workspace->name, 'currency' => $workspace->currency],
             'guarantee' => 'At-least-once event delivery with an idempotent, effectively-once business effect.',
             'syntheticDisclosure' => 'All organisations, payments, events, failures, timings, and revenue figures are synthetic lab evidence.',
+            'guide' => $this->guided->state($workspace, $fragile),
             'metrics' => [
                 'customer' => $fragile?->account->name,
                 'revenueAtRisk' => $incident && in_array($incident->status, ['open', 'investigating'], true) ? (float) $incident->revenue_impact : 0,
@@ -38,6 +41,7 @@ class DashboardService
                 'queueFailures' => $fragile?->queue_failures ?? 0,
                 'status' => $incident?->status ?? 'not_detected',
                 'accessState' => $fragile?->entitlements->first()?->state,
+                'slaThresholdMs' => $fragile?->sla_threshold_ms ?? (int) config('rescue_lab.entitlement_sla_seconds') * 1000,
             ],
             'incident' => $incident ? $this->incident($incident, $fragile) : null,
             'timeline' => $fragile ? $this->timeline($fragile) : [],
@@ -93,14 +97,17 @@ class DashboardService
                 'state' => 'success',
                 'at' => $run->payment->attempted_at->toIso8601String(),
             ],
-            [
+        ]);
+
+        if ($event) {
+            $items->push([
                 'kind' => 'webhook',
                 'title' => 'Signed provider event accepted',
-                'detail' => ($event?->provider_event_id ?? 'missing').' / 1 event, '.$run->webhook_deliveries.' deliveries',
+                'detail' => $event->provider_event_id.' / 1 event, '.$run->webhook_deliveries.' deliveries',
                 'state' => 'warning',
-                'at' => $event?->received_at?->toIso8601String(),
-            ],
-        ]);
+                'at' => $event->received_at->toIso8601String(),
+            ]);
+        }
 
         foreach ($run->attempts->sortBy('attempt_number') as $attempt) {
             $items->push([

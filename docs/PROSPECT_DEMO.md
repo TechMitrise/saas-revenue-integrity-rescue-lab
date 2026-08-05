@@ -1,16 +1,18 @@
-# Five-Minute Demonstration
+# Prospect Demonstration
 
-Run `make reset`, sign in, and keep the browser at the Control Room.
+Run `make reset`, sign in, and start at **Guided live incident**. Each click performs one real Laravel application action and reloads the observed state from MySQL.
 
 | Time | Screen | Evidence to show |
 | ---: | --- | --- |
-| 0:00 | Control Room | Synthetic Northstar Labs paid USD 4,800 but remains locked beyond the SLA. |
-| 0:45 | Customer Incident | One payment, one provider event, ten retained deliveries, three failed job attempts, one correlation trail. |
-| 1:35 | Root Cause | At-least-once delivery met a fragile provisioning path and bounded retries exhausted. |
-| 2:15 | Safe Recovery | Run reconciliation; show locked-to-active state, one entitlement, and one business effect. |
-| 3:00 | Safe Recovery | Run it again; show `no_op`, zero effects, and entitlement count still one. |
-| 3:35 | Fragile vs Stabilised | Compare the same scenario with one event/action in both modes but only the stabilised path activates within SLA. |
-| 4:25 | Engineering Evidence | Resolve claims to tests, architecture, commands, CI, and runbook. |
+| 0:00 | Guided steps 1-2 | Record the USD 4,800 payment, then deliver the signed webhook ten times. Show ten deliveries, one event, and one business effect. |
+| 0:50 | Guided steps 3-5 | Run the same entitlement job three times. Show each controlled timeout persisted while entitlement count remains one. |
+| 1:40 | Guided step 6 | Run the SLA audit. Show one paid-but-locked incident and USD 4,800 of synthetic monthly exposure. |
+| 2:20 | Guided steps 7-8 | Repair once, then repeat. Show active access, one first effect, `no_op`, zero repeat effects, and one entitlement. |
+| 3:10 | Incident and Root Cause | Show the single correlation trail, retained delivery IDs, failed attempts, and SLA evidence produced by those clicks. |
+| 4:00 | Fragile vs Stabilised | Compare the same scenario with one event/action in both modes but only the stabilised path activates within SLA. |
+| 4:35 | Engineering Evidence | Resolve claims to tests, architecture, commands, CI, and runbook. |
+
+For a ready-to-share 75-second version, run `make video`. It creates `artifacts/rescue-lab-prospect-demo.mp4` and `artifacts/rescue-lab-poster.png`, then restores the active incident fixture.
 
 Use this exact guarantee: "At-least-once event delivery with an idempotent, effectively-once business effect."
 

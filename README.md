@@ -44,10 +44,12 @@ These credentials are synthetic, local-only defaults. Replace the seeded identit
 
 ## Guided journey
 
-1. **Rescue Control Room:** see Northstar Labs, USD 4,800 synthetic monthly exposure, payment-to-access delay, failed attempts, and locked access.
-2. **Customer Incident:** follow payment, provider event, duplicate deliveries, queue attempts, and SLA breach using stored correlation IDs.
+Start with **Guided live incident** above the evidence tabs. Its eight controls persist one action at a time: successful payment, ten deliveries of one webhook, three queue failures, SLA detection, safe repair, and repeat no-op verification. The live facts and evidence tabs reload from MySQL after every action.
+
+1. **Rescue Control Room:** connect the technical failure to Northstar Labs, USD 4,800 synthetic monthly exposure, and locked access.
+2. **Customer Incident:** follow the actions just performed using stored correlation IDs.
 3. **Root Cause:** inspect at-least-once delivery, the failed entitlement job, and the breached access SLA.
-4. **Safe Recovery:** reconcile under row locks, compare before/after state, and run it again to prove a no-op.
+4. **Safe Recovery:** verify locked-to-active before/after state and the immutable repaired/no-op actions.
 5. **Fragile vs Stabilised:** compare the same synthetic scenario with and without signature, inbox, idempotency, uniqueness, retry, and reconciliation controls.
 6. **Engineering Evidence:** resolve product claims to tests, architecture, commands, and the runbook.
 
@@ -58,6 +60,7 @@ make simulate   # replay fragile and stabilised paths
 make reset      # restore the active paid-but-locked incident
 make reconcile  # repair once and verify the repeat no-op
 make test       # run the complete local quality gate
+make video      # create a narrated-caption prospect MP4 and poster in artifacts/
 ```
 
 Equivalent Artisan commands are `lab:simulate`, `lab:reset`, and `lab:reconcile --verify-no-op`.

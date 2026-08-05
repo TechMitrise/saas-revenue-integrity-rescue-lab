@@ -47,3 +47,44 @@ test('operator traces, repairs, verifies and compares the paid-access rescue', a
     await expect(page.getByRole('heading', { name: /Claims resolve to executable evidence/ })).toBeVisible();
     await expect(page.locator('#engineering-grid')).toContainText('./vendor/bin/sail test');
 });
+
+test('operator builds and rescues the incident one observable action at a time', async ({ page }) => {
+    await page.goto('/login');
+    await page.getByRole('button', { name: /Open the Control Room/ }).click();
+    await expect(page).toHaveURL(/\/app$/);
+
+    const runGuide = async (endpoint) => {
+        const completed = page.waitForResponse((response) => response.url().endsWith(endpoint) && response.ok());
+        await page.locator('#guide-action').click();
+        await completed;
+    };
+
+    await runGuide('/api/demo/guided/start');
+    await expect(page.locator('#guide-progress')).toHaveText('1 / 8 actions completed');
+    await expect(page.locator('.guide-step').nth(0)).toContainText('succeeded / USD 4,800');
+
+    await runGuide('/api/demo/guided/advance');
+    await expect(page.locator('#guide-progress')).toHaveText('2 / 8 actions completed');
+    await expect(page.locator('.guide-step').nth(1)).toContainText('10 deliveries / 1 event / 1 effect');
+
+    for (const completed of [3, 4, 5]) {
+        await runGuide('/api/demo/guided/advance');
+        await expect(page.locator('#guide-progress')).toHaveText(`${completed} / 8 actions completed`);
+    }
+    await expect(page.locator('.guide-step').nth(4)).toContainText('failed');
+
+    await runGuide('/api/demo/guided/advance');
+    await expect(page.locator('#guide-progress')).toHaveText('6 / 8 actions completed');
+    await expect(page.locator('.guide-step').nth(5)).toContainText('open / USD 4,800');
+
+    await runGuide('/api/demo/guided/advance');
+    await expect(page.locator('#guide-progress')).toHaveText('7 / 8 actions completed');
+    await expect(page.locator('.guide-step').nth(6)).toContainText('active / 1 effect');
+
+    await runGuide('/api/demo/guided/advance');
+    await expect(page.locator('#guide-progress')).toHaveText('8 / 8 actions completed');
+    await expect(page.locator('#guide-status')).toHaveText('Evidence complete');
+    await expect(page.locator('.guide-step').nth(7)).toContainText('no_op / 0 effects');
+    await expect(page.locator('#guide-facts')).toContainText('active');
+    await expect(page.locator('#guide-facts')).toContainText('1');
+});

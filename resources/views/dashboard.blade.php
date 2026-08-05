@@ -38,6 +38,33 @@
                 </aside>
             </section>
 
+            <section class="guided-demo" id="guided-demo">
+                <div class="guided-heading">
+                    <div>
+                        <p class="eyebrow">Guided live incident / 8 observable actions</p>
+                        <h2>Watch the failure happen.<br><em>Then rescue it safely.</em></h2>
+                        <p>One click performs one real application action. The evidence tabs below update from MySQL after every step.</p>
+                    </div>
+                    <span class="guide-progress" id="guide-progress">0 / 8 actions completed</span>
+                </div>
+                <div class="guide-layout">
+                    <ol class="guide-steps" id="guide-steps" aria-label="Guided incident steps"></ol>
+                    <aside class="guide-console">
+                        <div class="guide-console-head">
+                            <span>Live state</span>
+                            <i id="guide-status">Ready</i>
+                        </div>
+                        <h3 id="guide-summary">Start from a successful payment.</h3>
+                        <p id="guide-explanation">We will build the incident one persisted action at a time, then prove the repair is safe to repeat.</p>
+                        <div class="guide-facts" id="guide-facts"></div>
+                        <div class="guide-actions">
+                            <button class="primary-button guide-action" id="guide-action" type="button">Start: record successful payment</button>
+                            <button class="guide-restart" id="guide-restart" type="button">Restart guided incident</button>
+                        </div>
+                    </aside>
+                </div>
+            </section>
+
             <nav class="journey-nav" aria-label="Rescue evidence journey">
                 <button class="journey-step active" data-screen="control" type="button"><b>01</b><span>Control Room</span></button>
                 <button class="journey-step" data-screen="incident" type="button"><b>02</b><span>Customer Incident</span></button>

@@ -5,6 +5,7 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
+        "record:demo": "node scripts/record-prospect-demo.mjs",
         "test:e2e": "playwright test"
     },
     "devDependencies": {

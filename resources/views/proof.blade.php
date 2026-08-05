@@ -27,6 +27,8 @@
 </head>
 <body>
     @php($liveDemoAvailable = config('rescue_lab.demo_mutations_enabled'))
+    @php($contactUrl = config('rescue_lab.contact_url') ?: '#audit')
+    @php($videoUrl = config('rescue_lab.video_url'))
     <div class="proof-grain" aria-hidden="true"></div>
     <header class="proof-header proof-width">
         <a class="proof-brand" href="{{ route('proof') }}" aria-label="Revenue Integrity Rescue Lab home">
@@ -34,29 +36,26 @@
             <strong>Rescue Lab<small>Executable engineering proof</small></strong>
         </a>
         <nav aria-label="Proof page navigation">
-            <a href="#incident">Incident</a>
+            <a href="#walkthrough">Walkthrough</a>
             <a href="#evidence">Evidence</a>
             <a href="#controls">Controls</a>
+            <a href="#audit">Audit</a>
             @if (config('rescue_lab.repository_url'))
                 <a href="{{ config('rescue_lab.repository_url') }}" rel="noopener">GitHub</a>
             @endif
         </nav>
-        <a class="header-cta" href="{{ $liveDemoAvailable ? route('dashboard') : '#evidence' }}">{{ $liveDemoAvailable ? 'Open live lab' : 'Inspect proof' }} <span aria-hidden="true">{!! $liveDemoAvailable ? '&#8599;' : '&#8595;' !!}</span></a>
+        <a class="header-cta" href="{{ $contactUrl }}">Request Risk Triage <span aria-hidden="true">&#8599;</span></a>
     </header>
 
     <main>
         <section class="proof-hero proof-width">
             <div class="hero-message">
                 <p class="proof-eyebrow">Laravel rescue proof / Revenue path 001</p>
-                <h1>Revenue leaks rarely start at checkout.<br><em>They start after payment.</em></h1>
-                <p class="hero-lede">A successful payment can still become churn when duplicate events, failed queue jobs and slow provisioning leave a customer locked out. This lab makes that invisible failure observable, recoverable and safe to repeat.</p>
+                <h1>Payment succeeded.<br><em>Access failed.</em></h1>
+                <p class="hero-lede">A successful charge can still become churn when a webhook, queue job or legacy state transition fails before the customer receives value. This synthetic Laravel lab demonstrates how Tech Mitrise detects the gap, traces the evidence, quantifies exposure, recovers safely and prevents recurrence.</p>
                 <div class="hero-actions">
-                    @if ($liveDemoAvailable)
-                        <a class="proof-button primary" href="{{ route('dashboard') }}">Run the 8-action rescue <span>&#8599;</span></a>
-                    @else
-                        <a class="proof-button primary" href="#evidence">Review executable evidence <span>&#8595;</span></a>
-                    @endif
-                    <a class="proof-button text" href="#evidence">Inspect the proof <span>&#8595;</span></a>
+                    <a class="proof-button primary" href="{{ $contactUrl }}">Request a Legacy SaaS Risk Triage <span>&#8599;</span></a>
+                    <a class="proof-button text" href="{{ $liveDemoAvailable ? route('dashboard') : '#walkthrough' }}">{{ $liveDemoAvailable ? 'Run the live proof' : 'Inspect the walkthrough' }} <span>{!! $liveDemoAvailable ? '&#8599;' : '&#8595;' !!}</span></a>
                 </div>
                 <p class="hero-boundary"><i></i> Synthetic organisations, payments, failures, timings and revenue only.</p>
             </div>
@@ -82,8 +81,34 @@
                 <div><strong>10 &#8594; 1 &#8594; 1</strong><span>Deliveries / event / effect</span></div>
                 <div><strong>3 / 3</strong><span>Persisted queue failures</span></div>
                 <div><strong>1 + 0</strong><span>Repair / repeat effects</span></div>
-                <div><strong>122</strong><span>PHP assertions passing</span></div>
-                <div><strong>4</strong><span>Desktop + mobile journeys</span></div>
+                <div><strong>148</strong><span>PHP assertions passing</span></div>
+                <div><strong>6</strong><span>Desktop + mobile journeys</span></div>
+            </div>
+        </section>
+
+        <section class="walkthrough-section proof-width" id="walkthrough">
+            <div class="section-intro split-intro">
+                <div><p class="proof-eyebrow">105-second walkthrough</p><h2>See the business failure.<br><em>Then inspect the rescue.</em></h2></div>
+                <p>Payment succeeds, one signed event arrives ten times, queued provisioning fails, the access SLA is breached, and lock-protected reconciliation repairs the existing entitlement once.</p>
+            </div>
+            <a class="video-frame" href="{{ $videoUrl ?: ($liveDemoAvailable ? route('dashboard') : '#screenshots') }}" @if ($videoUrl) rel="noopener" @endif>
+                <div><span class="video-play" aria-hidden="true">&#9654;</span><p class="proof-eyebrow">Human walkthrough / 01:45</p><strong>{{ $videoUrl ? 'Watch the complete rescue' : 'Walkthrough URL configured at launch' }}</strong><small>{{ $videoUrl ? 'Business impact first. Technical evidence second.' : 'The live lab and six evidence frames remain available below.' }}</small></div>
+                <code>detect &#8594; trace &#8594; quantify &#8594; recover &#8594; prevent</code>
+            </a>
+        </section>
+
+        <section class="screenshot-section proof-width" id="screenshots">
+            <div class="section-intro split-intro">
+                <div><p class="proof-eyebrow">Guided incident evidence</p><h2>Six frames.<br><em>One correlation trail.</em></h2></div>
+                <p>Every frame uses synthetic data from the same paid-but-locked scenario. No client, provider or production outcome is represented.</p>
+            </div>
+            <div class="screenshot-grid">
+                <figure><img src="{{ asset('images/proof/01-rescue-control-room.png') }}" alt="Rescue Control Room showing a synthetic paid-but-locked incident" loading="lazy"><figcaption><b>01</b><span>Control Room</span><small>Payment succeeded; access remained locked beyond SLA.</small></figcaption></figure>
+                <figure><img src="{{ asset('images/proof/02-customer-incident-timeline.png') }}" alt="Customer incident timeline with correlated synthetic evidence" loading="lazy"><figcaption><b>02</b><span>Customer Incident</span><small>Payment, delivery, queue and entitlement share one trail.</small></figcaption></figure>
+                <figure><img src="{{ asset('images/proof/03-root-cause-evidence.png') }}" alt="Root cause evidence for duplicate webhook delivery and failed queue work" loading="lazy"><figcaption><b>03</b><span>Root Cause</span><small>Ten deliveries, three failures and one breached SLA.</small></figcaption></figure>
+                <figure><img src="{{ asset('images/proof/04-safe-recovery-before-after.png') }}" alt="Safe reconciliation before and after entitlement state" loading="lazy"><figcaption><b>04</b><span>Safe Recovery</span><small>The existing entitlement changes from locked to active.</small></figcaption></figure>
+                <figure><img src="{{ asset('images/proof/05-repeat-no-op-proof.png') }}" alt="Repeat reconciliation verified as a no-op" loading="lazy"><figcaption><b>05</b><span>Repeat Proof</span><small>The second recovery records zero additional effects.</small></figcaption></figure>
+                <figure><img src="{{ asset('images/proof/06-fragile-vs-stabilised.png') }}" alt="Fragile and stabilised Laravel revenue paths compared" loading="lazy"><figcaption><b>06</b><span>Before vs After</span><small>Same fixture; stabilised controls preserve the outcome.</small></figcaption></figure>
             </div>
         </section>
 
@@ -140,9 +165,26 @@
             </div>
         </section>
 
+        <section class="buyer-offer-section proof-width" id="audit">
+            <div class="buyer-fit">
+                <p class="proof-eyebrow">Who this is for</p>
+                <h2>Established SaaS.<br><em>Revenue-critical legacy paths.</em></h2>
+                <p>For founders, CTOs, fractional CTOs and agencies responsible for Laravel, Yii, CodeIgniter, PHP or MySQL platforms where payment, webhooks, queues and customer access cross fragile boundaries.</p>
+                <ul><li>Paid-but-locked or delayed-upgrade incidents</li><li>Duplicate webhook or fulfilment effects</li><li>Manual recovery with weak audit evidence</li><li>Modernisation risk around recurring revenue</li></ul>
+            </div>
+            <article class="audit-offer">
+                <div><p class="proof-eyebrow">Fixed-scope paid investigation</p><span>5 business days</span></div>
+                <h3>Legacy SaaS Risk &amp;<br>Revenue Audit</h3>
+                <p>Map one payment-to-customer-value path, reconstruct one failure, rank integrity controls and leave with a prioritised rescue plan.</p>
+                <dl><div><dt>Typical fee</dt><dd>USD 1,500-3,000</dd></div><div><dt>Evidence</dt><dd>Observed / correlated / hypothesis</dd></div><div><dt>Next phase</dt><dd>Optional Stabilisation Sprint</dd></div></dl>
+                <a class="proof-button primary" href="{{ $contactUrl }}">Request a Legacy SaaS Risk Triage <span>&#8599;</span></a>
+                <small>Implementation, production changes and broad codebase review are separate. No production credentials are required for the first call.</small>
+            </article>
+        </section>
+
         <section class="launch-cta proof-width">
-            <div><p class="proof-eyebrow">Proof before proposal</p><h2>Bring the legacy revenue path.<br><em>We will make the risk observable.</em></h2></div>
-            <div><p>Run the synthetic incident live, inspect its evidence, and use the architecture and operations package to evaluate the engineering approach.</p><a class="proof-button primary" href="{{ $liveDemoAvailable ? route('dashboard') : '#evidence' }}">{{ $liveDemoAvailable ? 'Open the Rescue Lab' : 'Review the evidence ledger' }} <span aria-hidden="true">{!! $liveDemoAvailable ? '&#8599;' : '&#8593;' !!}</span></a></div>
+            <div><p class="proof-eyebrow">Proof before proposal</p><h2>Bring one revenue path.<br><em>Make the risk observable.</em></h2></div>
+            <div><p>Start with a short fit call and one sanitized failure example. If the Audit fits, scope and evidence boundaries are agreed before any access is requested.</p><a class="proof-button primary" href="{{ $contactUrl }}">Request a Legacy SaaS Risk Triage <span aria-hidden="true">&#8599;</span></a></div>
         </section>
     </main>
 

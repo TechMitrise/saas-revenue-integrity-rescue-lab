@@ -20,6 +20,10 @@ It is deliberately synthetic, but the evidence is real application state: MySQL 
 
 Run the eight-action incident, inspect the code and challenge the recovery guarantee.
 
+For teams with an exposed payment-to-customer-value path, the next step is a five-business-day Legacy SaaS Risk & Revenue Audit, typically USD 1,500-3,000 after scope is confirmed.
+
+**CTA:** Request a Legacy SaaS Risk Triage -> `[INSERT CONTACT URL]`
+
 ## Prospect-call opener
 
 > Rather than show another CRUD portfolio, I want to show how we isolate risk in a revenue path. We will start with a successful payment, break access provisioning in controlled steps, quantify the impact, repair it under locks, and run the repair again to prove it is harmless.

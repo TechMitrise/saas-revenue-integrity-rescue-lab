@@ -3,14 +3,16 @@ import { expect, test } from '@playwright/test';
 test('public proof page explains the rescue and opens the working lab', async ({ page }) => {
     await page.goto('/proof');
 
-    await expect(page.getByRole('heading', { name: /Revenue leaks rarely start at checkout/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Payment succeeded/ })).toBeVisible();
     await expect(page.locator('.incident-artifact')).toContainText('Northstar Labs');
     await expect(page.locator('.incident-artifact')).toContainText('$4,800');
     await expect(page.locator('.proof-ledger')).toContainText('10');
+    await expect(page.locator('.screenshot-grid figure')).toHaveCount(6);
     await expect(page.locator('.evidence-table')).toContainText('ReconciliationService.php');
+    await expect(page.locator('#audit')).toContainText('USD 1,500-3,000');
     await expect(page.getByText('At-least-once delivery / Effectively-once business effect')).toBeVisible();
 
-    await page.getByRole('link', { name: /Run the 8-action rescue/ }).click();
+    await page.getByRole('link', { name: /Run the live proof/ }).click();
     await expect(page).toHaveURL(/\/login$/);
     await expect(page.getByRole('heading', { name: 'Enter the lab.' })).toBeVisible();
 });
@@ -79,6 +81,10 @@ test('operator builds and rescues the incident one observable action at a time',
     await expect(page.locator('.guide-step').nth(0)).toContainText('succeeded / USD 4,800');
 
     await runGuide('/api/demo/guided/advance');
+    await expect(page.locator('#guide-progress')).toHaveText('2 / 8 actions completed');
+    await expect(page.locator('.guide-step').nth(1)).toContainText('10 deliveries / 1 event / 1 effect');
+
+    await page.reload();
     await expect(page.locator('#guide-progress')).toHaveText('2 / 8 actions completed');
     await expect(page.locator('.guide-step').nth(1)).toContainText('10 deliveries / 1 event / 1 effect');
 

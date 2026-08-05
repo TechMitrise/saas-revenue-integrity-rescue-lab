@@ -11,6 +11,18 @@
 
 Rescue Lab is a working Laravel demonstration of a revenue-critical SaaS failure: a synthetic customer pays successfully, the provider delivers the same webhook repeatedly, and a queued entitlement job exhausts bounded retries. Access remains locked beyond its SLA until a transactionally safe reconciliation restores it. A second reconciliation is retained as a verified no-op.
 
+## Tech Mitrise rescue method
+
+The lab makes one legacy-modernisation method inspectable:
+
+1. **Detect** the gap between successful payment and delivered customer value.
+2. **Trace** payment, webhook, queue and entitlement state through one correlation trail.
+3. **Quantify** the affected synthetic account, SLA breach and revenue exposure.
+4. **Recover safely** under transaction, row-lock and uniqueness controls, then verify a repeat no-op.
+5. **Prevent recurrence** with signature verification, persistent inbox, idempotency, bounded retries and operational evidence.
+
+The lab sells the investigation and rescue method. It is not itself a commercial SaaS product.
+
 ## Evidence boundary
 
 Every organisation, user, plan, subscription, invoice, payment, provider event, delivery, failure, timing, and revenue figure is synthetic lab evidence. The project has no external billing connection and does not claim real recovered customer revenue.
@@ -68,6 +80,8 @@ make reset      # restore the active paid-but-locked incident
 make reconcile  # repair once and verify the repeat no-op
 make test       # run the complete local quality gate
 make video      # create a narrated-caption prospect MP4 and poster in artifacts/
+make screenshots # regenerate six 1440 x 900 application proof frames
+make proof-assets # regenerate screenshots, README image and social preview
 ```
 
 Equivalent Artisan commands are `lab:simulate`, `lab:reset`, and `lab:reconcile --verify-no-op`.
@@ -109,6 +123,7 @@ The mandatory tests are in [`tests/Feature/PaidAccessRescueTest.php`](tests/Feat
 - [Release audit](docs/RELEASE_AUDIT.md) records the observed public release-candidate checks and external deployment boundary.
 - [GitHub launch runbook](docs/GITHUB_LAUNCH.md) contains repository settings, placeholder replacement, branch protection and first-release commands.
 - [Launch copy](docs/LAUNCH_COPY.md) provides accurate GitHub, proof-page and prospect-call messaging.
+- [EOD launch control center](docs/launch/README.md) links the walkthrough, Audit, proposal, demo-call, Upwork, outreach, fact-intake and freeze packages.
 
 ## Contributing and security
 

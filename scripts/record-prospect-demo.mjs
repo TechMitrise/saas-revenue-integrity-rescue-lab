@@ -53,10 +53,10 @@ async function openScreen(page, name, panel, copy) {
     await page.getByRole('button', { name }).click();
     await page.locator(`[data-panel="${panel}"]`).scrollIntoViewIfNeeded();
     await caption(page, ...copy);
-    await pause(5000);
+    await pause(6000);
 }
 
-async function runGuide(page, endpoint, copy, wait = 3200) {
+async function runGuide(page, endpoint, copy, wait = 6000) {
     const response = page.waitForResponse((candidate) => candidate.url().endsWith(endpoint) && candidate.ok());
     await page.locator('#guide-action').click();
     await response;
@@ -77,14 +77,14 @@ const page = await context.newPage();
 try {
     await page.goto(`${baseURL}/login`, { waitUntil: 'networkidle' });
     await caption(page, 'Revenue Integrity Rescue Lab', 'Cash arrived. Access did not.', 'A synthetic Laravel SaaS incident, traced from payment to entitlement.');
-    await pause(4500);
+    await pause(6000);
 
     await page.getByRole('button', { name: /Open the Control Room/ }).click();
     await page.waitForURL(/\/app$/);
 
     await page.locator('#guided-demo').scrollIntoViewIfNeeded();
     await caption(page, 'Live incident replay', 'One click. One real application action.', 'Every step writes through the Laravel domain services and reloads its evidence from MySQL.');
-    await pause(4000);
+    await pause(5000);
 
     await runGuide(page, '/api/demo/guided/start', [
         '01 / Payment',
@@ -95,33 +95,33 @@ try {
         '02 / Duplicate webhook',
         'Ten deliveries. One provider event. One effect.',
         'The persistent inbox retains every signed delivery while the consumer advances the subscription once.',
-    ], 4300);
+    ], 8000);
 
     for (const attempt of [1, 2, 3]) {
         await runGuide(page, '/api/demo/guided/advance', [
             `0${attempt + 2} / Queue attempt ${attempt}`,
             'Controlled provisioning timeout persisted',
             `Attempt ${attempt} failed without creating another entitlement. The evidence remains inspectable.`,
-        ], 2400);
+        ], 5000);
     }
 
     await runGuide(page, '/api/demo/guided/advance', [
         '06 / Revenue integrity audit',
         'Paid-but-locked incident detected',
         'The SLA breach is translated into one affected account and USD 4,800 of synthetic monthly revenue exposure.',
-    ], 4300);
+    ], 8000);
     await page.screenshot({ path: poster });
 
     await runGuide(page, '/api/demo/guided/advance', [
         '07 / Safe reconciliation',
         'Access active. One business effect.',
         'A transaction, row locks and unique constraints repair the existing entitlement and retain before/after state.',
-    ], 4300);
+    ], 8000);
     await runGuide(page, '/api/demo/guided/advance', [
         '08 / Idempotency proof',
         'Repeat result: no_op',
         'The second reconciliation produces zero additional effects. Entitlement count remains one.',
-    ], 4800);
+    ], 7000);
 
     await openScreen(page, /Customer Incident/, 'incident', [
         'Evidence / Customer Incident',
@@ -138,7 +138,7 @@ try {
     await page.getByRole('button', { name: /Safe Recovery/ }).click();
     await page.locator('[data-panel="recovery"]').scrollIntoViewIfNeeded();
     await caption(page, 'Evidence / Safe Recovery', 'Before, after and immutable actions', 'The repaired and no_op outcomes remain visible with their exact business-effect counts.');
-    await pause(5000);
+    await pause(6000);
 
     await openScreen(page, /Fragile vs Stabilised/, 'comparison', [
         'Evidence / Before and after',
@@ -154,7 +154,7 @@ try {
 
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
     await caption(page, 'Accurate guarantee', 'At-least-once delivery. Effectively-once business effect.', 'Synthetic evidence only. Built to explain how we rescue and modernise revenue-critical Laravel systems.');
-    await pause(6500);
+    await pause(7000);
 } finally {
     await context.close();
     await browser.close();

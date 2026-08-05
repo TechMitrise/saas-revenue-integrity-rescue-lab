@@ -12,8 +12,10 @@ class ProofPageTest extends TestCase
 
         $this->get('/proof')
             ->assertOk()
-            ->assertSee('Revenue leaks rarely start at checkout.')
-            ->assertSee('Run the 8-action rescue')
+            ->assertSee('Payment succeeded.')
+            ->assertSee('Request a Legacy SaaS Risk Triage')
+            ->assertSee('Legacy SaaS Risk &amp;', false)
+            ->assertSee('USD 1,500-3,000')
             ->assertSee('10')
             ->assertSee('Effectively-once business effect');
     }
@@ -36,7 +38,17 @@ class ProofPageTest extends TestCase
 
         $this->get('/proof')
             ->assertOk()
-            ->assertDontSee('Run the 8-action rescue')
-            ->assertSee('Review executable evidence');
+            ->assertDontSee('Run the live proof')
+            ->assertSee('Inspect the walkthrough');
+    }
+
+    public function test_proof_page_uses_the_configured_contact_url(): void
+    {
+        config()->set('rescue_lab.contact_url', 'https://example.test/risk-triage');
+
+        $this->get('/proof')
+            ->assertOk()
+            ->assertSee('https://example.test/risk-triage', false)
+            ->assertSee('Request a Legacy SaaS Risk Triage');
     }
 }

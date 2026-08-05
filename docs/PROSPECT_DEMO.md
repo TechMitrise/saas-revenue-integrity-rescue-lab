@@ -12,7 +12,7 @@ Run `make reset`, sign in, and start at **Guided live incident**. Each click per
 | 4:00 | Fragile vs Stabilised | Compare the same scenario with one event/action in both modes but only the stabilised path activates within SLA. |
 | 4:35 | Engineering Evidence | Resolve claims to tests, architecture, commands, CI, and runbook. |
 
-For a ready-to-share 75-second version, run `make video`. It creates `artifacts/rescue-lab-prospect-demo.mp4` and `artifacts/rescue-lab-poster.png`, then restores the active incident fixture.
+For a ready-to-record 105-second human script, captions and shot list, use [`launch/WALKTHROUGH.md`](launch/WALKTHROUGH.md). Run `make video` to create the matching captioned browser visual at `artifacts/rescue-lab-prospect-demo.mp4`; the command also creates a poster and restores the active incident fixture.
 
 Use this exact guarantee: "At-least-once event delivery with an idempotent, effectively-once business effect."
 

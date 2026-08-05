@@ -19,6 +19,8 @@ Upload `docs/assets/github-social-preview.png` under **Settings > General > Soci
 
 Set `RESCUE_LAB_REPOSITORY_URL` in the deployed environment after the repository exists so the proof page displays its GitHub link.
 
+Set `RESCUE_LAB_VIDEO_URL` to the approved 90-120-second walkthrough and `RESCUE_LAB_CONTACT_URL` to the approved Risk Triage form or scheduling page. Until those values exist, keep the visible placeholders in the WordPress copy rather than guessing destinations.
+
 Production defaults to a read-only proof page. Set `RESCUE_LAB_DEMO_MUTATIONS_ENABLED=true` only when the deployment is an isolated synthetic lab and authenticated visitors should be able to replay/reset its fixture.
 
 Verify no namespace placeholder has escaped this runbook:

@@ -2,121 +2,191 @@
 
 namespace Database\Seeders;
 
+use App\Exceptions\SyntheticProvisioningFailure;
+use App\Jobs\ProvisionEntitlement;
 use App\Models\Account;
 use App\Models\Activity;
 use App\Models\AuditRun;
+use App\Models\Entitlement;
 use App\Models\Incident;
 use App\Models\Invoice;
+use App\Models\LabRun;
 use App\Models\Payment;
+use App\Models\Plan;
+use App\Models\ProvisioningAttempt;
+use App\Models\ReconciliationAction;
 use App\Models\Subscription;
+use App\Models\WebhookDelivery;
+use App\Models\WebhookEvent;
 use App\Models\Workspace;
+use App\Services\EntitlementProvisioner;
+use App\Services\RevenueIntegrityAuditor;
+use App\Services\WebhookIngestor;
+use App\Services\WebhookSignature;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class DemoScenarioSeeder
 {
     public function seed(Workspace $workspace, ?CarbonImmutable $at = null): void
     {
         $now = $at ?? now()->toImmutable();
+        $this->clear($workspace);
 
-        DB::transaction(function () use ($workspace, $now): void {
-            Activity::query()->where('workspace_id', $workspace->id)->delete();
-            AuditRun::query()->where('workspace_id', $workspace->id)->delete();
+        $plan = Plan::query()->create([
+            'workspace_id' => $workspace->id,
+            'code' => 'scale-annual',
+            'name' => 'Scale Annual',
+            'monthly_price' => 4800,
+            'currency' => 'USD',
+        ]);
+
+        $this->simulate($workspace, $plan, 'fragile', $now);
+        $this->simulate($workspace, $plan, 'stabilised', $now);
+        resolve(RevenueIntegrityAuditor::class)->run($workspace, null, $now);
+    }
+
+    private function clear(Workspace $workspace): void
+    {
+        DB::transaction(function () use ($workspace): void {
+            ReconciliationAction::query()->where('workspace_id', $workspace->id)->delete();
+            ProvisioningAttempt::query()->where('workspace_id', $workspace->id)->delete();
+            WebhookDelivery::query()->where('workspace_id', $workspace->id)->delete();
+            WebhookEvent::query()->where('workspace_id', $workspace->id)->delete();
             Incident::query()->where('workspace_id', $workspace->id)->delete();
+            Entitlement::query()->where('workspace_id', $workspace->id)->delete();
+            LabRun::query()->where('workspace_id', $workspace->id)->delete();
             Payment::query()->where('workspace_id', $workspace->id)->delete();
             Invoice::query()->where('workspace_id', $workspace->id)->delete();
             Subscription::query()->where('workspace_id', $workspace->id)->delete();
             Account::query()->where('workspace_id', $workspace->id)->delete();
-
-            $accountData = [
-                ['external_id' => 'acct_aperture', 'name' => 'Aperture Health', 'segment' => 'Enterprise', 'owner_name' => 'Maya Chen'],
-                ['external_id' => 'acct_northstar', 'name' => 'Northstar Labs', 'segment' => 'Enterprise', 'owner_name' => 'Eli Turner'],
-                ['external_id' => 'acct_orbit', 'name' => 'Orbit Freight', 'segment' => 'Growth', 'owner_name' => 'Maya Chen'],
-                ['external_id' => 'acct_harbor', 'name' => 'Harbor & Pine', 'segment' => 'Growth', 'owner_name' => 'Noah Williams'],
-                ['external_id' => 'acct_lumen', 'name' => 'Lumen Works', 'segment' => 'Growth', 'owner_name' => 'Eli Turner'],
-                ['external_id' => 'acct_summit', 'name' => 'Summit AI', 'segment' => 'Startup', 'owner_name' => 'Noah Williams'],
-                ['external_id' => 'acct_pioneer', 'name' => 'Pioneer Cloud', 'segment' => 'Startup', 'owner_name' => 'Maya Chen'],
-                ['external_id' => 'acct_cedar', 'name' => 'Cedar Systems', 'segment' => 'Startup', 'owner_name' => 'Eli Turner'],
-            ];
-
-            $accounts = collect($accountData)->mapWithKeys(function (array $data) use ($workspace): array {
-                $account = Account::query()->create(['workspace_id' => $workspace->id, ...$data]);
-
-                return [$data['external_id'] => $account];
-            });
-
-            $subscriptionData = [
-                ['external_id' => 'sub_aperture', 'account' => 'acct_aperture', 'plan' => 'Scale', 'status' => 'active', 'amount' => 6200],
-                ['external_id' => 'sub_northstar', 'account' => 'acct_northstar', 'plan' => 'Scale', 'status' => 'active', 'amount' => 4800],
-                ['external_id' => 'sub_orbit', 'account' => 'acct_orbit', 'plan' => 'Growth', 'status' => 'active', 'amount' => 3200],
-                ['external_id' => 'sub_harbor', 'account' => 'acct_harbor', 'plan' => 'Growth', 'status' => 'active', 'amount' => 1800],
-                ['external_id' => 'sub_lumen', 'account' => 'acct_lumen', 'plan' => 'Growth', 'status' => 'canceled', 'amount' => 2600],
-                ['external_id' => 'sub_summit', 'account' => 'acct_summit', 'plan' => 'Launch', 'status' => 'active', 'amount' => 1250],
-                ['external_id' => 'sub_pioneer', 'account' => 'acct_pioneer', 'plan' => 'Launch', 'status' => 'active', 'amount' => 950],
-                ['external_id' => 'sub_cedar', 'account' => 'acct_cedar', 'plan' => 'Launch', 'status' => 'active', 'amount' => 700],
-            ];
-
-            $subscriptions = collect($subscriptionData)->mapWithKeys(function (array $data) use ($workspace, $accounts, $now): array {
-                $subscription = Subscription::query()->create([
-                    'workspace_id' => $workspace->id,
-                    'account_id' => $accounts[$data['account']]->id,
-                    'external_id' => $data['external_id'],
-                    'plan' => $data['plan'],
-                    'status' => $data['status'],
-                    'expected_monthly_amount' => $data['amount'],
-                    'currency' => 'USD',
-                    'started_at' => $now->subYear()->startOfMonth(),
-                    'canceled_at' => $data['status'] === 'canceled' ? $now->subDays(15) : null,
-                ]);
-
-                return [$data['external_id'] => $subscription];
-            });
-
-            $invoiceData = [
-                ['external_id' => 'inv_aperture', 'subscription' => 'sub_aperture', 'amount' => 6200, 'status' => 'paid', 'due' => 'future'],
-                ['external_id' => 'inv_northstar', 'subscription' => 'sub_northstar', 'amount' => 4800, 'status' => 'past_due', 'due' => 'past'],
-                ['external_id' => 'inv_orbit', 'subscription' => 'sub_orbit', 'amount' => 2400, 'status' => 'paid', 'due' => 'future'],
-                ['external_id' => 'inv_lumen', 'subscription' => 'sub_lumen', 'amount' => 2600, 'status' => 'open', 'due' => 'future'],
-                ['external_id' => 'inv_summit', 'subscription' => 'sub_summit', 'amount' => 1250, 'status' => 'past_due', 'due' => 'past'],
-                ['external_id' => 'inv_pioneer_a', 'subscription' => 'sub_pioneer', 'amount' => 950, 'status' => 'open', 'due' => 'future'],
-                ['external_id' => 'inv_pioneer_b', 'subscription' => 'sub_pioneer', 'amount' => 950, 'status' => 'open', 'due' => 'future'],
-                ['external_id' => 'inv_cedar', 'subscription' => 'sub_cedar', 'amount' => 700, 'status' => 'paid', 'due' => 'future'],
-            ];
-
-            $invoices = collect($invoiceData)->mapWithKeys(function (array $data) use ($workspace, $subscriptions, $now): array {
-                $subscription = $subscriptions[$data['subscription']];
-                $invoice = Invoice::query()->create([
-                    'workspace_id' => $workspace->id,
-                    'account_id' => $subscription->account_id,
-                    'subscription_id' => $subscription->id,
-                    'external_id' => $data['external_id'],
-                    'period_start' => $now->startOfMonth(),
-                    'period_end' => $now->endOfMonth(),
-                    'amount' => $data['amount'],
-                    'currency' => 'USD',
-                    'status' => $data['status'],
-                    'due_date' => $data['due'] === 'past' ? $now->subDays(2) : $now->addDays(7),
-                ]);
-
-                return [$data['external_id'] => $invoice];
-            });
-
-            foreach ([
-                ['external_id' => 'pay_aperture', 'invoice' => 'inv_aperture', 'amount' => 6200, 'status' => 'succeeded'],
-                ['external_id' => 'pay_northstar', 'invoice' => 'inv_northstar', 'amount' => 4800, 'status' => 'failed', 'failure_code' => 'insufficient_funds'],
-                ['external_id' => 'pay_orbit', 'invoice' => 'inv_orbit', 'amount' => 2400, 'status' => 'succeeded'],
-                ['external_id' => 'pay_cedar', 'invoice' => 'inv_cedar', 'amount' => 700, 'status' => 'succeeded'],
-            ] as $data) {
-                Payment::query()->create([
-                    'workspace_id' => $workspace->id,
-                    'invoice_id' => $invoices[$data['invoice']]->id,
-                    'external_id' => $data['external_id'],
-                    'amount' => $data['amount'],
-                    'status' => $data['status'],
-                    'attempted_at' => $now->subDay(),
-                    'failure_code' => $data['failure_code'] ?? null,
-                ]);
-            }
+            Plan::query()->where('workspace_id', $workspace->id)->delete();
+            Activity::query()->where('workspace_id', $workspace->id)->delete();
+            AuditRun::query()->where('workspace_id', $workspace->id)->delete();
         });
+    }
+
+    private function simulate(Workspace $workspace, Plan $plan, string $mode, CarbonImmutable $now): LabRun
+    {
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        $timer = hrtime(true);
+        $suffix = $mode === 'fragile' ? 'fragile' : 'stabilised';
+        $account = Account::query()->create([
+            'workspace_id' => $workspace->id,
+            'external_id' => "org_northstar_{$suffix}",
+            'name' => $mode === 'fragile' ? 'Northstar Labs' : 'Northstar Labs / Stabilised replay',
+            'segment' => 'Synthetic enterprise',
+            'owner_name' => 'Maya Chen',
+        ]);
+        $subscription = Subscription::query()->create([
+            'workspace_id' => $workspace->id,
+            'account_id' => $account->id,
+            'plan_id' => $plan->id,
+            'external_id' => "sub_northstar_{$suffix}",
+            'plan' => $plan->name,
+            'status' => 'pending',
+            'expected_monthly_amount' => $plan->monthly_price,
+            'currency' => 'USD',
+            'access_sla_seconds' => config('rescue_lab.entitlement_sla_seconds'),
+            'started_at' => $now->subYear()->startOfMonth(),
+        ]);
+        $invoice = Invoice::query()->create([
+            'workspace_id' => $workspace->id,
+            'account_id' => $account->id,
+            'subscription_id' => $subscription->id,
+            'external_id' => "inv_northstar_{$suffix}",
+            'period_start' => $now->startOfMonth(),
+            'period_end' => $now->endOfMonth(),
+            'amount' => $plan->monthly_price,
+            'currency' => 'USD',
+            'status' => 'paid',
+            'due_date' => $now->addDays(7),
+        ]);
+        $payment = Payment::query()->create([
+            'workspace_id' => $workspace->id,
+            'invoice_id' => $invoice->id,
+            'external_id' => "pay_northstar_{$suffix}",
+            'amount' => $plan->monthly_price,
+            'status' => 'succeeded',
+            'attempted_at' => $mode === 'fragile' ? $now->subMinutes(10) : $now,
+        ]);
+        $run = LabRun::query()->create([
+            'workspace_id' => $workspace->id,
+            'account_id' => $account->id,
+            'subscription_id' => $subscription->id,
+            'payment_id' => $payment->id,
+            'scenario_key' => 'northstar-paid-access-v1',
+            'mode' => $mode,
+            'correlation_id' => (string) Str::uuid(),
+            'status' => 'running',
+            'sla_threshold_ms' => $subscription->access_sla_seconds * 1000,
+            'started_at' => $now,
+        ]);
+        $payload = [
+            'event_id' => "evt_payment_succeeded_{$suffix}",
+            'type' => 'payment.succeeded',
+            'account_id' => $account->external_id,
+            'subscription_id' => $subscription->external_id,
+            'payment_id' => $payment->external_id,
+            'amount' => (float) $payment->amount,
+            'currency' => 'USD',
+            'synthetic' => true,
+        ];
+        $signature = resolve(WebhookSignature::class)->sign($payload);
+        $event = null;
+
+        foreach (range(1, 10) as $deliveryNumber) {
+            $result = resolve(WebhookIngestor::class)->ingest(
+                $workspace,
+                $payload,
+                $signature,
+                "dlv_{$suffix}_".str_pad((string) $deliveryNumber, 2, '0', STR_PAD_LEFT),
+                $run,
+                false,
+            );
+            $event = $result['event'];
+        }
+
+        $entitlement = Entitlement::query()->where('lab_run_id', $run->id)->firstOrFail();
+        $job = new ProvisionEntitlement($entitlement->id, $run->id, $event?->id);
+        $attempts = $mode === 'fragile' ? (int) config('rescue_lab.provisioning_max_attempts') : 1;
+
+        foreach (range(1, $attempts) as $attempt) {
+            try {
+                $job->handle(resolve(EntitlementProvisioner::class));
+            } catch (SyntheticProvisioningFailure) {
+                // The deterministic failure is the evidence this controlled run is designed to retain.
+            }
+        }
+
+        $elapsed = max(1, (int) ((hrtime(true) - $timer) / 1_000_000));
+        $queryCount = count(DB::getQueryLog());
+        DB::disableQueryLog();
+        $delayMs = $mode === 'fragile' ? $payment->attempted_at->diffInMilliseconds($now) : 420;
+        $run->update([
+            'entitlement_state' => $entitlement->fresh()->state,
+            'payment_to_access_ms' => $delayMs,
+            'sla_breached' => $delayMs > $run->sla_threshold_ms,
+            'before_state' => [
+                'payment' => 'succeeded',
+                'subscription' => 'active',
+                'entitlement' => $entitlement->fresh()->state,
+            ],
+            'query_count' => $queryCount,
+            'processing_ms' => $elapsed,
+            'evidence' => [
+                'synthetic' => true,
+                'provider_event_id' => $payload['event_id'],
+                'provider_delivery_ids' => WebhookDelivery::query()->where('lab_run_id', $run->id)->pluck('provider_delivery_id')->all(),
+                'entitlement_id' => $entitlement->id,
+                'attempt_ids' => ProvisioningAttempt::query()->where('lab_run_id', $run->id)->pluck('id')->all(),
+            ],
+            'status' => $mode === 'fragile' ? 'failed' : 'completed',
+            'completed_at' => $now,
+        ]);
+
+        return $run->fresh();
     }
 }

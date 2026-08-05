@@ -28,4 +28,14 @@ class Workspace extends Model
     {
         return $this->hasMany(Incident::class);
     }
+
+    public function plans(): HasMany
+    {
+        return $this->hasMany(Plan::class);
+    }
+
+    public function labRuns(): HasMany
+    {
+        return $this->hasMany(LabRun::class);
+    }
 }

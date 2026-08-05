@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\Workspace;
-use App\Services\RevenueIntegrityAuditor;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -35,6 +34,5 @@ class DatabaseSeeder extends Seeder
         );
 
         resolve(DemoScenarioSeeder::class)->seed($workspace);
-        resolve(RevenueIntegrityAuditor::class)->run($workspace, $user);
     }
 }

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['workspace_id', 'account_id', 'external_id', 'plan', 'status', 'expected_monthly_amount', 'currency', 'started_at', 'canceled_at'])]
+#[Fillable(['workspace_id', 'account_id', 'plan_id', 'external_id', 'plan', 'status', 'expected_monthly_amount', 'currency', 'access_sla_seconds', 'started_at', 'canceled_at'])]
 class Subscription extends Model
 {
     protected function casts(): array
@@ -29,8 +29,18 @@ class Subscription extends Model
         return $this->belongsTo(Account::class);
     }
 
+    public function planRecord(): BelongsTo
+    {
+        return $this->belongsTo(Plan::class, 'plan_id');
+    }
+
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
+    }
+
+    public function entitlements(): HasMany
+    {
+        return $this->hasMany(Entitlement::class);
     }
 }

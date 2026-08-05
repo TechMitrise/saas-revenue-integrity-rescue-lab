@@ -2,10 +2,9 @@
 
 namespace App\Services;
 
-use App\Models\Activity;
-use App\Models\AuditRun;
 use App\Models\Incident;
-use App\Models\Subscription;
+use App\Models\LabRun;
+use App\Models\ReconciliationAction;
 use App\Models\Workspace;
 use Illuminate\Support\Collection;
 
@@ -14,83 +13,153 @@ class DashboardService
     /** @return array<string, mixed> */
     public function for(Workspace $workspace): array
     {
-        $subscriptions = Subscription::query()->whereBelongsTo($workspace)->get();
-        $activeSubscriptions = $subscriptions->where('status', 'active');
-        $incidents = Incident::query()
+        $runs = LabRun::query()
             ->whereBelongsTo($workspace)
-            ->with(['account', 'notes'])
-            ->orderByRaw("FIELD(status, 'open', 'investigating', 'recovered', 'dismissed')")
-            ->orderByRaw("FIELD(severity, 'critical', 'high', 'medium', 'low')")
-            ->orderByDesc('revenue_impact')
+            ->with(['account', 'subscription', 'payment', 'deliveries', 'events', 'attempts', 'entitlements', 'reconciliations'])
+            ->orderByRaw("FIELD(mode, 'fragile', 'stabilised')")
             ->get();
-        $activeIncidents = $incidents->whereIn('status', ['open', 'investigating']);
-        $affectedSubscriptions = $activeIncidents->pluck('subscription_id')->filter()->unique();
-        $healthyCount = $activeSubscriptions->whereNotIn('id', $affectedSubscriptions)->count();
-
-        $breakdown = $activeIncidents
-            ->groupBy('type')
-            ->map(fn (Collection $group, string $type): array => [
-                'type' => $type,
-                'count' => $group->count(),
-                'impact' => (float) $group->sum('revenue_impact'),
-            ])
-            ->sortByDesc('impact')
-            ->values();
-
-        $latestAudit = AuditRun::query()->whereBelongsTo($workspace)->latest('completed_at')->first();
+        $fragile = $runs->firstWhere('mode', 'fragile');
+        $incident = Incident::query()
+            ->whereBelongsTo($workspace)
+            ->where('type', 'paid_but_locked')
+            ->with('account')
+            ->first();
 
         return [
             'workspace' => ['name' => $workspace->name, 'currency' => $workspace->currency],
+            'guarantee' => 'At-least-once event delivery with an idempotent, effectively-once business effect.',
+            'syntheticDisclosure' => 'All organisations, payments, events, failures, timings, and revenue figures are synthetic lab evidence.',
             'metrics' => [
-                'totalMrr' => (float) $activeSubscriptions->sum('expected_monthly_amount'),
-                'atRisk' => (float) $activeIncidents->sum('revenue_impact'),
-                'recovered' => (float) $incidents->where('status', 'recovered')->sum('revenue_impact'),
-                'activeIncidents' => $activeIncidents->count(),
-                'healthyRate' => $activeSubscriptions->isEmpty() ? 100 : (int) round(($healthyCount / $activeSubscriptions->count()) * 100),
-                'monitoredAccounts' => $workspace->accounts()->count(),
+                'customer' => $fragile?->account->name,
+                'revenueAtRisk' => $incident && in_array($incident->status, ['open', 'investigating'], true) ? (float) $incident->revenue_impact : 0,
+                'monthlyRevenue' => $fragile ? (float) $fragile->subscription->expected_monthly_amount : 0,
+                'paymentToAccessMs' => $fragile?->payment_to_access_ms,
+                'duplicateDeliveries' => $fragile ? max(0, $fragile->webhook_deliveries - 1) : 0,
+                'queueFailures' => $fragile?->queue_failures ?? 0,
+                'status' => $incident?->status ?? 'not_detected',
+                'accessState' => $fragile?->entitlements->first()?->state,
             ],
-            'incidents' => $incidents->map($this->serializeIncident(...))->values(),
-            'breakdown' => $breakdown,
-            'activity' => Activity::query()
-                ->where('workspace_id', $workspace->id)
-                ->latest()
-                ->limit(8)
-                ->get()
-                ->map(fn (Activity $activity): array => [
-                    'id' => $activity->id,
-                    'type' => $activity->type,
-                    'message' => $activity->message,
-                    'at' => $activity->created_at->toIso8601String(),
-                ]),
-            'lastAuditAt' => $latestAudit?->completed_at?->toIso8601String(),
+            'incident' => $incident ? $this->incident($incident, $fragile) : null,
+            'timeline' => $fragile ? $this->timeline($fragile) : [],
+            'comparison' => $runs->map($this->run(...))->values(),
+            'reconciliations' => $fragile?->reconciliations->sortBy('created_at')->map(fn (ReconciliationAction $action): array => [
+                'id' => $action->action_id,
+                'result' => $action->result,
+                'businessEffects' => $action->business_effects,
+                'before' => $action->before_state,
+                'after' => $action->after_state,
+                'reason' => $action->reason,
+                'at' => $action->created_at->toIso8601String(),
+            ])->values() ?? [],
+            'engineering' => [
+                ['label' => 'Domain and feature tests', 'path' => 'tests/Feature/PaidAccessRescueTest.php', 'command' => './vendor/bin/sail test'],
+                ['label' => 'Desktop and mobile journey', 'path' => 'tests/Browser/revenue-rescue.spec.js', 'command' => './vendor/bin/sail npm run test:e2e'],
+                ['label' => 'Webhook and reconciliation architecture', 'path' => 'docs/ARCHITECTURE.md', 'command' => 'Open architecture evidence'],
+                ['label' => 'Operations and recovery runbook', 'path' => 'docs/OPERATIONS.md', 'command' => 'Open runbook evidence'],
+            ],
         ];
     }
 
     /** @return array<string, mixed> */
-    public function serializeIncident(Incident $incident): array
+    private function incident(Incident $incident, ?LabRun $run): array
     {
         return [
             'id' => $incident->id,
             'accountName' => $incident->account->name,
-            'type' => $incident->type,
-            'severity' => $incident->severity,
-            'status' => $incident->status,
             'title' => $incident->title,
+            'status' => $incident->status,
+            'severity' => $incident->severity,
             'reason' => $incident->reason,
+            'rootCause' => $incident->root_cause,
             'recommendedAction' => $incident->recommended_action,
             'revenueImpact' => (float) $incident->revenue_impact,
+            'revenueFormula' => 'Synthetic monthly revenue exposed = the active paid subscription monthly amount while access remains locked.',
             'currency' => $incident->currency,
-            'assignee' => $incident->assignee,
             'evidence' => $incident->evidence,
-            'createdAt' => $incident->created_at->toIso8601String(),
-            'lastDetectedAt' => $incident->last_detected_at->toIso8601String(),
-            'recoveredAt' => $incident->recovered_at?->toIso8601String(),
-            'notes' => $incident->notes->map(fn ($note): array => [
-                'id' => $note->id,
-                'author' => $note->author_name,
-                'body' => $note->body,
-                'at' => $note->created_at->toIso8601String(),
-            ])->values(),
+            'slaBreachedAt' => $incident->sla_breached_at?->toIso8601String(),
+            'entitlementId' => $run?->entitlements->first()?->id,
+        ];
+    }
+
+    /** @return Collection<int, array<string, mixed>> */
+    private function timeline(LabRun $run): Collection
+    {
+        $event = $run->events->first();
+        $items = collect([
+            [
+                'kind' => 'payment',
+                'title' => 'Synthetic payment succeeded',
+                'detail' => $run->payment->external_id.' / USD '.number_format((float) $run->payment->amount),
+                'state' => 'success',
+                'at' => $run->payment->attempted_at->toIso8601String(),
+            ],
+            [
+                'kind' => 'webhook',
+                'title' => 'Signed provider event accepted',
+                'detail' => ($event?->provider_event_id ?? 'missing').' / 1 event, '.$run->webhook_deliveries.' deliveries',
+                'state' => 'warning',
+                'at' => $event?->received_at?->toIso8601String(),
+            ],
+        ]);
+
+        foreach ($run->attempts->sortBy('attempt_number') as $attempt) {
+            $items->push([
+                'kind' => 'queue',
+                'title' => "Provisioning attempt {$attempt->attempt_number}: {$attempt->status}",
+                'detail' => $attempt->job_uuid.' / '.($attempt->failure_code ?? 'access activated').' / '.$attempt->duration_ms.'ms',
+                'state' => $attempt->status === 'succeeded' ? 'success' : 'danger',
+                'at' => $attempt->completed_at->toIso8601String(),
+            ]);
+        }
+
+        if ($run->sla_breached) {
+            $items->push([
+                'kind' => 'sla',
+                'title' => 'Entitlement SLA breached',
+                'detail' => $run->payment_to_access_ms.'ms elapsed / '.$run->sla_threshold_ms.'ms SLA',
+                'state' => 'danger',
+                'at' => $run->completed_at?->toIso8601String(),
+            ]);
+        }
+
+        foreach ($run->reconciliations->sortBy('created_at') as $action) {
+            $items->push([
+                'kind' => 'reconciliation',
+                'title' => "Reconciliation {$action->result}",
+                'detail' => $action->action_id.' / '.$action->business_effects.' business effect(s)',
+                'state' => 'success',
+                'at' => $action->created_at->toIso8601String(),
+            ]);
+        }
+
+        return $items->sortBy('at')->values();
+    }
+
+    /** @return array<string, mixed> */
+    private function run(LabRun $run): array
+    {
+        return [
+            'mode' => $run->mode,
+            'scenarioKey' => $run->scenario_key,
+            'correlationId' => $run->correlation_id,
+            'webhookDeliveries' => $run->webhook_deliveries,
+            'providerEvents' => $run->events->count(),
+            'businessActions' => $run->business_actions,
+            'queueAttempts' => $run->queue_attempts,
+            'queueFailures' => $run->queue_failures,
+            'entitlementState' => $run->entitlements->first()?->state,
+            'paymentToAccessMs' => $run->payment_to_access_ms,
+            'slaThresholdMs' => $run->sla_threshold_ms,
+            'slaBreached' => $run->sla_breached,
+            'reconciliationResult' => $run->reconciliation_result,
+            'before' => $run->before_state,
+            'after' => $run->after_state,
+            'queryCount' => $run->query_count,
+            'processingMs' => $run->processing_ms,
+            'controls' => $run->mode === 'stabilised' ? [
+                'Signature verification', 'Persistent inbox', 'Unique provider event', 'Idempotent consumer',
+                'Unique entitlement', 'Bounded retries', 'Transactional reconciliation',
+            ] : ['No recurrence controls applied in fragile mode'],
         ];
     }
 }

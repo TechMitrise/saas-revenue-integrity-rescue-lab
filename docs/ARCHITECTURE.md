@@ -2,82 +2,83 @@
 
 ## System shape
 
-The application is a server-rendered Laravel monolith with a small JSON interaction layer. Blade renders authentication and the dashboard shell, Vite compiles the CSS and browser JavaScript, Laravel handles every read and mutation, and MySQL is the system of record.
+Rescue Lab is a tenant-aware Laravel monolith with MySQL persistence and a Valkey-backed Horizon queue.
 
 ```text
-Browser
-  -> Laravel web routes and session authentication
-  -> workspace-scoped controllers
-  -> audit and dashboard services
-  -> Eloquent models
-  -> MySQL 8.4
+Synthetic provider
+  -> POST /api/webhooks/synthetic-pay
+  -> HMAC verification
+  -> webhook_deliveries (every unique delivery)
+  -> webhook_events (one row per provider event)
+  -> idempotent consumer under a database transaction
+  -> guarded subscription transition + unique locked entitlement
+  -> ProvisionEntitlement job on Valkey/Horizon
+  -> provisioning_attempts (bounded success/failure evidence)
+  -> paid-but-locked detector
+  -> Rescue Control Room
+  -> lock-protected reconciliation
+  -> immutable reconciliation_actions + active entitlement
 ```
 
-This shape keeps the local setup compact while retaining clear boundaries between HTTP, domain rules, persistence, and presentation.
+The browser uses Laravel session authentication and CSRF protection. The webhook route is CSRF-exempt because it uses HMAC authentication; it accepts only the explicitly synthetic contract.
 
 ## Tenant boundary
 
-Each user belongs to one workspace. Accounts, subscriptions, invoices, payments, incidents, audit runs, and activities carry a `workspace_id`. Controllers derive that ID from the authenticated user instead of accepting it from the request. Incident updates and notes query through the current workspace and return `404` for records owned by another tenant.
+`workspace_id` is present on every business and evidence table. Authenticated controllers derive it from the current user. Reconciliation queries the incident through that workspace and returns `404` across tenant boundaries. Provider records also carry workspace-scoped unique keys.
 
-The current model is suitable for one-workspace-per-user access. A future many-to-many membership model can replace `users.workspace_id` without changing the domain tables.
+## Paid-access model
 
-## Data model
-
-| Table | Purpose |
+| Table | Role |
 | --- | --- |
-| `workspaces` | Tenant identity, timezone, and currency |
-| `users` | Session-authenticated revenue operators |
-| `accounts` | Customer accounts and owners |
-| `subscriptions` | Expected monthly contract value and lifecycle |
-| `invoices` | Billing period, amount, status, and due date |
-| `payments` | Collection attempts and failure evidence |
-| `incidents` | Idempotent audit findings and recovery state |
-| `incident_notes` | Operator investigation context |
-| `audit_runs` | Scan counts, timing, and initiator |
-| `activities` | User-visible operational audit trail |
+| `workspaces`, `users` | Tenant and authenticated operator |
+| `accounts` | Synthetic customer organisation |
+| `plans`, `subscriptions` | Commercial expectation and safe lifecycle state |
+| `invoices`, `payments` | Successful synthetic payment evidence |
+| `lab_runs` | Reproducible fragile/stabilised measurements |
+| `webhook_deliveries` | One row per unique provider delivery ID |
+| `webhook_events` | Persistent inbox, unique provider event, processing result |
+| `entitlements` | Access state with one business entitlement per subscription/key |
+| `provisioning_attempts` | Job UUID, attempt number, duration, and retained failure |
+| `incidents` | Correlated paid-but-locked finding and revenue impact |
+| `reconciliation_actions` | Immutable before/after audit and business-effect count |
+| `activities`, `audit_runs` | Operator-visible audit history |
 
-Foreign keys enforce ownership and cleanup. The unique `(workspace_id, fingerprint)` index prevents repeated scans from duplicating the same incident.
+## Event and effect guarantees
 
-## Audit engine
+Delivery remains at least once. Ten different delivery IDs may reference one provider event ID. The database constraint on `(workspace_id, provider, provider_event_id)` creates one inbox event. Only a newly accepted event enters the consumer.
 
-`RevenueIntegrityAuditor` loads the current billing period for one workspace, evaluates deterministic rules, and writes findings in a transaction. Every finding contains a stable fingerprint, severity, revenue impact, human-readable evidence, and a recommended action.
+The consumer locks the subscription, permits only `pending -> active` for a successful payment, and creates the entitlement through the unique `(workspace_id, subscription_id, entitlement_key)` key. Replayed or out-of-order events cannot create another entitlement or repeat the business transition.
 
-| Rule | Trigger | Exposure |
-| --- | --- | --- |
-| Payment failure | Failed collection with no successful payment | Invoice amount |
-| Missing invoice | Active subscription with no current-period invoice | Expected MRR |
-| Underbilling | Invoice below expected monthly amount | Contract shortfall |
-| Overdue invoice | Past due with no successful or explicitly failed payment | Invoice amount |
-| Duplicate invoice | Multiple active invoices for one subscription and period | Smallest duplicate amount |
-| Post-cancel billing | Non-void invoice after subscription cancellation | Invoice amount |
+This is an application-level effectively-once business effect, not distributed exactly-once delivery.
 
-Repeated scans update `last_detected_at` and evidence on existing incidents. Operator status and notes are preserved, so the audit refresh is idempotent and does not erase investigation work.
+## Queue failure and SLA
 
-## HTTP surface
+`ProvisionEntitlement` is a real `ShouldQueue` job with three attempts, a 30-second timeout, and `[1, 5, 15]` second backoff. Compose runs Horizon against Valkey. The deterministic fragile adapter writes each failed attempt before throwing `SyntheticProvisioningFailure`; Horizon can retain broker-level failure visibility while the application table retains domain evidence.
 
-All application endpoints use Laravel session authentication and CSRF protection.
+The lab computes payment-to-access duration against `subscriptions.access_sla_seconds`. A successful payment plus active subscription, locked entitlement, and breached SLA produces the `paid_but_locked` incident. Revenue impact equals the active paid subscription's synthetic monthly amount.
 
-| Method | Route | Purpose |
-| --- | --- | --- |
-| `GET` | `/login` | Login form |
-| `POST` | `/login` | Start authenticated session |
-| `POST` | `/logout` | End authenticated session |
-| `GET` | `/app` | Dashboard shell |
-| `GET` | `/api/dashboard` | Tenant metrics, incidents, breakdown, and activity |
-| `POST` | `/api/audits` | Run an integrity scan |
-| `PATCH` | `/api/incidents/{id}` | Update status or assignee |
-| `POST` | `/api/incidents/{id}/notes` | Add an operator note |
-| `GET` | `/api/incidents/export.csv` | Download the incident register |
-| `POST` | `/api/demo/reset` | Restore local demo data; unavailable outside local/testing |
+## Reconciliation
 
-## Key locations
+`ReconciliationService` runs in a MySQL transaction and obtains row locks for the incident, lab run, and entitlement. It updates the existing entitlement instead of creating one. Every invocation writes an immutable reconciliation action:
 
-- `app/Services/RevenueIntegrityAuditor.php`: detection and idempotent persistence
-- `app/Services/DashboardService.php`: metrics and browser response projection
-- `app/Http/Controllers/Api`: authenticated workflow endpoints
-- `database/migrations`: MySQL schema and constraints
-- `database/seeders`: deterministic rescue scenario
-- `resources/views`: login and dashboard Blade templates
-- `resources/js/app.js`: browser workflow
-- `resources/css/app.css`: responsive visual system
-- `tests/Unit`, `tests/Feature`, `tests/Browser`: layered verification
+- First run: `repaired`, one business effect, locked-to-active snapshot.
+- Repeat run: `no_op`, zero business effects, entitlement count remains one.
+
+## Fragile and stabilised runs
+
+Both modes use `northstar-paid-access-v1`, USD 4,800 synthetic monthly revenue, and ten deliveries of one payment event.
+
+- **Fragile:** three deterministic queue failures, locked access, payment-to-access SLA breach, paid-but-locked incident.
+- **Stabilised:** verified signature, persistent inbox, idempotent consumer, unique entitlement, successful first job attempt, active access within SLA.
+
+`lab_runs` persists deliveries, events, business actions, attempts, failures, access state, SLA, reconciliation result, snapshots, observed query count, processing time, and correlation evidence.
+
+## Key code
+
+- `app/Services/WebhookIngestor.php`
+- `app/Jobs/ProvisionEntitlement.php`
+- `app/Services/EntitlementProvisioner.php`
+- `app/Services/RevenueIntegrityAuditor.php`
+- `app/Services/ReconciliationService.php`
+- `database/seeders/DemoScenarioSeeder.php`
+- `database/migrations/2026_08_05_000200_create_paid_access_rescue_tables.php`

@@ -1,50 +1,80 @@
 # SaaS Revenue Integrity Rescue Lab
 
-A tenant-aware Laravel application for detecting, prioritizing, and resolving SaaS billing and collection anomalies. The local rescue scenario turns subscription, invoice, and payment records into an operational incident queue with revenue exposure, evidence, recommended actions, ownership, notes, recovery tracking, and an audit trail.
+> Payment succeeded. Access failed. The system traced, recovered and stabilised the revenue path safely.
+
+Rescue Lab is a working Laravel demonstration of a revenue-critical SaaS failure: a synthetic customer pays successfully, the provider delivers the same webhook repeatedly, and a queued entitlement job exhausts bounded retries. Access remains locked beyond its SLA until a transactionally safe reconciliation restores it. A second reconciliation is retained as a verified no-op.
+
+## Evidence boundary
+
+Every organisation, user, plan, subscription, invoice, payment, provider event, delivery, failure, timing, and revenue figure is synthetic lab evidence. The project has no external billing connection and does not claim real recovered customer revenue.
+
+The implemented guarantee is:
+
+> At-least-once event delivery with an idempotent, effectively-once business effect.
+
+The project does not claim distributed exactly-once delivery.
 
 ## Stack
 
-- Laravel 13.8 on PHP 8.5
-- MySQL 8.4
-- Laravel Sail and Docker
-- Blade, Vite, and framework-free browser JavaScript
-- PHPUnit for unit and feature coverage
-- Playwright with headless Chromium for end-to-end coverage
+- Laravel 13 on PHP 8.5
+- MySQL 8.4 as the system of record
+- Valkey 8 as the Redis-compatible queue and Horizon store
+- Laravel Horizon 5.48 and a dedicated Compose worker
+- Blade, Vite 8, and framework-free browser JavaScript
+- PHPUnit 12 and Playwright desktop/mobile coverage
 
-## Start locally
+## First run
 
-Docker Desktop is the only host dependency. PHP, Composer, Node, and MySQL run through Sail.
+Docker Desktop and `make` are the only host requirements.
 
 ```bash
-cp .env.example .env
-docker run --rm -v "$PWD:/app" -w /app composer:2 composer install
-./vendor/bin/sail up -d --build
-./vendor/bin/sail artisan key:generate
-./vendor/bin/sail artisan migrate:fresh --seed
-./vendor/bin/sail npm install
-./vendor/bin/sail npm run build
+make demo
 ```
 
-Open [http://localhost:18080](http://localhost:18080) and use the local demo account:
+The command refreshes dependencies in Docker when required, starts Laravel/MySQL/Valkey/Horizon, generates `APP_KEY` only when absent, applies migrations, creates the synthetic fixture only when absent, installs frontend dependencies and pinned Chromium, and builds assets.
+
+Open [http://localhost:18080](http://localhost:18080):
 
 ```text
 Email: operator@rescuelab.test
 Password: rescue-demo
 ```
 
-The application uses host port `18080` for Laravel and `13307` for optional direct MySQL access. Containers communicate internally on the standard ports.
+These credentials are synthetic, local-only defaults. Replace the seeded identity before any public deployment.
 
-## Rescue workflow
+## Guided journey
 
-1. Sign in to the workspace.
-2. Review monitored MRR, active exposure, recovered value, and billing health.
-3. Select an incident to inspect its evidence and recommended action.
-4. Assign an owner, move the incident through investigation, and record notes.
-5. Mark verified recoveries as recovered and watch risk metrics update.
-6. Run another integrity scan to refresh findings without creating duplicates.
-7. Export the incident register as CSV when needed.
+1. **Rescue Control Room:** see Northstar Labs, USD 4,800 synthetic monthly exposure, payment-to-access delay, failed attempts, and locked access.
+2. **Customer Incident:** follow payment, provider event, duplicate deliveries, queue attempts, and SLA breach using stored correlation IDs.
+3. **Root Cause:** inspect at-least-once delivery, the failed entitlement job, and the breached access SLA.
+4. **Safe Recovery:** reconcile under row locks, compare before/after state, and run it again to prove a no-op.
+5. **Fragile vs Stabilised:** compare the same synthetic scenario with and without signature, inbox, idempotency, uniqueness, retry, and reconciliation controls.
+6. **Engineering Evidence:** resolve product claims to tests, architecture, commands, and the runbook.
 
-The seeded scenario detects six failure modes: payment failure, missing invoice, underbilling, overdue invoice, duplicate invoice, and billing after cancellation.
+## Scenario commands
+
+```bash
+make simulate   # replay fragile and stabilised paths
+make reset      # restore the active paid-but-locked incident
+make reconcile  # repair once and verify the repeat no-op
+make test       # run the complete local quality gate
+```
+
+Equivalent Artisan commands are `lab:simulate`, `lab:reset`, and `lab:reconcile --verify-no-op`.
+
+## Safety controls
+
+- HMAC verification with an explicitly synthetic local signing credential
+- Persistent delivery ledger plus unique provider event and delivery constraints
+- Idempotent consumer and guarded subscription state transitions
+- One entitlement per workspace/subscription/key
+- Transaction and row locking around provisioning and reconciliation
+- Three bounded job attempts with `[1, 5, 15]` second backoff
+- Horizon and persisted provisioning-attempt visibility
+- Immutable reconciliation actions with before/after snapshots
+- Workspace-derived reads and mutations
+- MySQL and Valkey are not bound to host ports
+- `.env`, dependencies, compiled assets, logs, and test artifacts are ignored
 
 ## Verification
 
@@ -52,21 +82,26 @@ The seeded scenario detects six failure modes: payment failure, missing invoice,
 ./vendor/bin/sail pint --test
 ./vendor/bin/sail test
 ./vendor/bin/sail npm run build
-./vendor/bin/sail npx playwright install chromium
 ./vendor/bin/sail npm run test:e2e
+./vendor/bin/sail composer audit --locked --no-interaction
+./vendor/bin/sail npm audit --audit-level=low
 ```
 
-The end-to-end workflow runs in desktop and mobile Chromium. It signs in, resets the scenario, opens the failed-payment incident, assigns it, adds an investigation note, marks it recovered, confirms metric changes, reruns the audit, and signs out.
+The mandatory tests are in [`tests/Feature/PaidAccessRescueTest.php`](tests/Feature/PaidAccessRescueTest.php), [`tests/Unit/RevenueIntegrityAuditorTest.php`](tests/Unit/RevenueIntegrityAuditorTest.php), and [`tests/Browser/revenue-rescue.spec.js`](tests/Browser/revenue-rescue.spec.js). GitHub Actions repeats the same release gates in [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
-## Project guide
+## Architecture and operations
 
-- [Architecture](docs/ARCHITECTURE.md) describes tenancy, data flow, schema, and audit behavior.
-- [Operations](docs/OPERATIONS.md) covers startup, testing, reset, troubleshooting, and production guardrails.
-- [Current state](docs/CURRENT_STATE.md) records exactly what is implemented and what remains simulated.
-- [Product scope](docs/PRODUCT_SCOPE.md) separates the shipped Revenue Integrity module from proposed Legacy Assessment work.
-- [Decisions](docs/DECISIONS.md) preserves the product and technical choices already agreed.
-- [Roadmap](docs/ROADMAP.md) defines the phased path from baseline protection through market launch.
-- [Prospect demo](docs/PROSPECT_DEMO.md) provides the honest talk track and demonstration sequence.
-- [Growth engine](docs/GROWTH_ENGINE.md) captures positioning, offers, acquisition, and sales operations.
+- [Architecture](docs/ARCHITECTURE.md) documents event ingestion, queue processing, constraints, tenancy, detection, and reconciliation.
+- [Operations](docs/OPERATIONS.md) is the setup, deployment, rollback, failed-job, reconciliation, and incident-response runbook.
+- [Prospect demo](docs/PROSPECT_DEMO.md) provides an accurate five-minute walkthrough.
+- [Current state](docs/CURRENT_STATE.md) states what is implemented and what remains outside the lab boundary.
+- [Release audit](docs/RELEASE_AUDIT.md) records the observed public release-candidate checks and external deployment boundary.
 
-No remote repository or external SaaS integration is configured. All current application data remains in the local MySQL Docker volume.
+## Limitations
+
+- The payment provider and failure adapter are deterministic simulations.
+- The lab accepts only its synthetic signed webhook contract.
+- Reconciliation activates a synthetic entitlement; it does not call a real provider.
+- No public signup, commercial billing, production identity provider, or customer-data import exists.
+- A production deployment still requires approved infrastructure, secrets, TLS, monitoring, backups, and an operator access policy.
+- No deployment, remote push, or external service configuration is performed by this repository.

@@ -1,94 +1,103 @@
-# Operations
+# Operations and Incident Runbook
 
-## Daily commands
-
-Start the stack:
+## First run
 
 ```bash
-./vendor/bin/sail up -d
+make demo
 ```
 
-View service state and logs:
+`make demo` is idempotent: it creates `.env` when missing, refreshes Composer dependencies when their declarations change, starts the stack, generates `APP_KEY` only when blank, applies pending migrations, creates missing lab data, installs Node dependencies and Chromium, and builds assets. It does not rotate an existing key.
+
+## Services
 
 ```bash
 ./vendor/bin/sail ps
-./vendor/bin/sail logs
+./vendor/bin/sail logs laravel.test
+./vendor/bin/sail logs queue
+./vendor/bin/sail artisan horizon:status
 ```
 
-Stop containers without deleting data:
+Laravel is available at `http://localhost:18080`. MySQL and Valkey have no host port bindings. Horizon uses the internal `redis` connection and is authorised only according to `HorizonServiceProvider` outside local environments.
+
+## Scenario operations
 
 ```bash
-./vendor/bin/sail stop
+make simulate
+make reset
+make reconcile
 ```
 
-MySQL data persists in the `sail-mysql` Docker volume across stops and rebuilds.
+- `lab:simulate` recreates and reports both controlled paths.
+- `lab:reset` restores the active paid-but-locked incident.
+- `lab:reconcile --verify-no-op` repairs access and immediately verifies the repeat no-op.
 
-## Database lifecycle
+These commands delete and recreate only synthetic data in the selected lab workspace. Never enable them for customer or production data.
 
-Apply pending migrations without deleting data:
+## Quality gate
 
 ```bash
-./vendor/bin/sail artisan migrate
+make test
+./vendor/bin/sail composer audit --locked --no-interaction
+./vendor/bin/sail npm audit --audit-level=low
+./vendor/bin/sail composer validate --strict --no-check-publish
+./vendor/bin/sail composer check-platform-reqs --lock
 ```
 
-Recreate the local database and original rescue scenario:
+PHPUnit uses Sail's `testing` MySQL database and `QUEUE_CONNECTION=sync`. Playwright runs the complete journey in desktop Chromium and Pixel 7 emulation against the running application.
 
-```bash
-./vendor/bin/sail artisan migrate:fresh --seed
-```
+## Failed-job recovery
 
-The dashboard's `Reset lab` action performs a workspace-level scenario reset and is intentionally available only when `APP_ENV` is `local` or `testing`.
+1. Inspect `provisioning_attempts` and the Customer Incident timeline before retrying anything.
+2. Check Horizon with `./vendor/bin/sail artisan horizon:status` and the authenticated Horizon dashboard where authorised.
+3. List broker failures with `./vendor/bin/sail artisan queue:failed`.
+4. Confirm the failed job belongs to the intended workspace and entitlement correlation ID.
+5. Prefer `lab:reconcile` for the demonstrated paid-but-locked state; it is lock-safe and auditable.
+6. Retry a real failed job only after removing its root cause: `./vendor/bin/sail artisan queue:retry <uuid>`.
+7. Verify access, entitlement count, reconciliation history, and SLA state after recovery.
 
-## Quality gates
+Do not blindly run `queue:retry all` in a multi-tenant production environment.
 
-Run these checks before a release candidate:
+## Reconciliation incident response
 
-```bash
-./vendor/bin/sail pint --test
-./vendor/bin/sail test
-./vendor/bin/sail npm run build
-./vendor/bin/sail npm run test:e2e
-```
+1. Confirm payment status is `succeeded` and subscription state is `active`.
+2. Confirm the entitlement remains `locked` and the SLA is breached.
+3. Capture provider event ID, delivery IDs, job UUIDs, and entitlement ID from the incident.
+4. Run reconciliation once.
+5. Verify the action reports `repaired`, one business effect, and entitlement count one.
+6. Run reconciliation again.
+7. Verify `no_op`, zero business effects, and entitlement count still one.
+8. Preserve both immutable action IDs in the incident record.
 
-PHPUnit uses the MySQL `testing` database created by Sail. `RefreshDatabase` isolates each test. Playwright runs the full workflow at desktop and mobile viewports against the running application container using a pinned Chromium build installed with:
+## Deployment guidance
 
-```bash
-./vendor/bin/sail npx playwright install chromium
-```
+No production host is selected or configured. An approved deployment must provide:
 
-Failed Playwright runs retain traces and screenshots under ignored local artifact directories.
+- PHP 8.5-compatible Laravel runtime
+- managed MySQL 8.4-compatible database
+- managed Redis/Valkey with persistence suitable for Horizon
+- separate web and Horizon worker processes
+- TLS termination, private database/cache networking, and secret injection
+- `APP_ENV=production`, `APP_DEBUG=false`, a unique `APP_KEY`, and a non-demo identity
+- scheduler entry for `php artisan schedule:run` and Horizon snapshots
+- health checks for `/up`, database, cache, and worker heartbeat
+- central logs, error monitoring, queue alerts, backups, and tested restore
 
-## Ports
+Deploy with immutable application artifacts, then run `php artisan migrate --force`, `php artisan horizon:terminate`, and a smoke test. Never run `migrate:fresh`, seeders, reset, or simulation commands against production data.
 
-| Service | Host | Container |
-| --- | ---: | ---: |
-| Laravel | `18080` | `80` |
-| MySQL | `13307` | `3306` |
-| Vite development server | `5173` | `5173` |
+## Rollback
 
-Change host bindings with `APP_PORT`, `FORWARD_DB_PORT`, and `VITE_PORT` in `.env` if another local project uses them. Laravel must continue to use `DB_HOST=mysql` and `DB_PORT=3306` inside Sail.
+1. Stop new traffic or put the application into maintenance mode when required.
+2. Stop or terminate Horizon so workers do not execute code across releases.
+3. Roll back the application artifact to the previous known-good version.
+4. Roll back database migrations only when the migration is explicitly reversible and no new production data would be lost.
+5. Prefer a forward fix for additive schema changes.
+6. Restart Horizon, exit maintenance, and verify payment/webhook/entitlement health.
+7. Preserve webhook inbox and reconciliation history; never delete them to make a rollback appear clean.
 
-## Troubleshooting
+## Backup and restore
 
-If Sail reports that Docker is unavailable, start Docker Desktop and retry. If a port is occupied, change only the corresponding host variable in `.env`.
+Back up MySQL and Valkey according to the hosting provider's supported policy. A restore test must verify provider-event uniqueness, entitlement uniqueness, unresolved incidents, reconciliation actions, and queue state. Application files alone are not a recoverable system.
 
-If the app starts before MySQL is healthy, wait a few seconds and run:
+## Secrets and access
 
-```bash
-./vendor/bin/sail artisan migrate:status
-```
-
-If compiled assets are missing, rebuild them:
-
-```bash
-./vendor/bin/sail npm install
-./vendor/bin/sail npm run build
-```
-
-## Production guardrails
-
-Before any deployment, set `APP_ENV=production`, `APP_DEBUG=false`, a production `APP_URL`, a unique `APP_KEY`, and managed database credentials. Run migrations with `--force`, compile assets in CI, and never run `migrate:fresh`, `db:seed`, or the demo reset against production data.
-
-The local demo credentials are prefilled only in the local environment. Production login fields remain empty. Replace the seeded operator with the intended identity and access-management process before exposing the application.
-
-No GitHub remote, external billing provider, email provider, or telemetry service is configured by this project.
+`.env` is ignored. The committed webhook credential is explicitly synthetic and local-only. Production must inject a rotated credential through its secret manager. Replace demo credentials, restrict Horizon through the gate, keep MySQL/Valkey private, and do not log signatures, passwords, or raw secrets.

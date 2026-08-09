@@ -81,7 +81,7 @@
                 <div><strong>10 &#8594; 1 &#8594; 1</strong><span>Deliveries / event / effect</span></div>
                 <div><strong>3 / 3</strong><span>Persisted queue failures</span></div>
                 <div><strong>1 + 0</strong><span>Repair / repeat effects</span></div>
-                <div><strong>232</strong><span>PHP assertions passing</span></div>
+                <div><strong>233</strong><span>PHP assertions passing</span></div>
                 <div><strong>8</strong><span>Desktop + mobile journeys</span></div>
             </div>
         </section>

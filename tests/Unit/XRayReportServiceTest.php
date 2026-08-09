@@ -54,6 +54,20 @@ class XRayReportServiceTest extends TestCase
         $this->assertSame(9500, collect($this->report['roadmap']['phases'])->sum('price'));
     }
 
+    public function test_guided_path_has_the_required_buyer_decision_sequence(): void
+    {
+        $this->assertSame([
+            'Business failure',
+            'First proven divergence',
+            'Evidence and root-cause decision',
+            'Safe containment',
+            'Approved recovery and rollback boundary',
+            'Verified synthetic outcome',
+            '$2,250 X-Ray and $9,500 roadmap',
+            'Risk Triage CTA',
+        ], collect($this->report['guided'])->pluck('title')->all());
+    }
+
     public function test_final_verified_state_and_idempotency_claim_are_supported(): void
     {
         $claims = collect($this->report['verifiedOutcome'])->pluck('claim')->all();

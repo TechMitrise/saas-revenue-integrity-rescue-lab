@@ -14,6 +14,9 @@
         $evidenceById = collect($report['evidence'])->keyBy('id');
         $findingsById = collect($report['findings'])->keyBy('id');
         $ctaUrl = $report['cta']['url'] ?: '#access-required';
+        $queueStage = collect($report['stages'])->firstWhere('id', 'queue');
+        $defaultStageId = $queueStage['id'] ?? $report['stages'][0]['id'];
+        $printPageCount = 15;
     @endphp
 
     <header class="xray-top">
@@ -61,13 +64,22 @@
         <section class="guided-shell xray-width" id="guided">
             <div class="section-head">
                 <p class="xray-eyebrow">Guided three-minute view</p>
-                <h2>One sales-call path. Six decisions.</h2>
-                <p>Use Previous/Next to narrate the buyer story, then open the full report for evidence detail.</p>
+                <h2>One buyer path. Eight decisions.</h2>
+                <p>Use Previous/Next, the step rail, or arrow keys to narrate the incident without technical wandering.</p>
             </div>
-            <div class="guided-view" data-guided>
-                <div class="guided-progress"><span data-guided-count>1 / {{ count($report['guided']) }}</span><a href="#full-report">Open full report</a></div>
+            <div class="guided-view" data-guided tabindex="0" aria-label="Guided Critical Software X-Ray path">
+                <div class="guided-progress">
+                    <span data-guided-count>1 / {{ count($report['guided']) }}</span>
+                    <i aria-hidden="true"><b data-guided-meter></b></i>
+                    <a href="#full-report">Open full report</a>
+                </div>
+                <ol class="guided-steps" aria-label="Guided path steps">
+                    @foreach ($report['guided'] as $index => $step)
+                        <li><button type="button" class="@if ($index === 0) active @endif" data-guided-jump="{{ $index }}" aria-controls="guided-step-{{ $index }}">{{ $index + 1 }}</button></li>
+                    @endforeach
+                </ol>
                 @foreach ($report['guided'] as $index => $step)
-                    <article class="guided-card @if ($index === 0) active @endif" data-guided-step="{{ $index }}">
+                    <article class="guided-card @if ($index === 0) active @endif" id="guided-step-{{ $index }}" data-guided-step="{{ $index }}" aria-live="polite">
                         <small>{{ str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT) }}</small>
                         <h3>{{ $step['title'] }}</h3>
                         <p>{{ $step['summary'] }}</p>
@@ -108,14 +120,14 @@
                 <div class="path-layout">
                     <div class="path-map" role="list">
                         @foreach ($report['stages'] as $stage)
-                            <button type="button" class="path-stage {{ $stage['status'] }} @if ($loop->first) active @endif" data-stage="{{ $stage['id'] }}" role="listitem">
+                            <button type="button" class="path-stage {{ $stage['status'] }} @if ($stage['id'] === $defaultStageId) active @endif" data-stage="{{ $stage['id'] }}" role="listitem">
                                 <b>{{ $loop->iteration }}</b><span>{{ $stage['label'] }}</span><small>{{ $stage['status'] }}</small>
                             </button>
                         @endforeach
                     </div>
                     <div class="stage-detail">
                         @foreach ($report['stages'] as $stage)
-                            <article class="@if ($loop->first) active @endif" data-stage-panel="{{ $stage['id'] }}">
+                            <article class="@if ($stage['id'] === $defaultStageId) active @endif" data-stage-panel="{{ $stage['id'] }}">
                                 <p class="xray-eyebrow">{{ $stage['status'] === 'diverged' || $stage['status'] === 'blocked' ? 'First divergence evidence' : 'Stage evidence' }}</p>
                                 <h4>{{ $stage['label'] }}</h4>
                                 <dl>
@@ -312,5 +324,222 @@
             </section>
         </section>
     </main>
+
+    <section class="xray-print-document" aria-label="Printable Critical Software X-Ray specimen">
+        <article class="print-page print-cover">
+            <header><span>Tech Mitrise</span><b>Page 01 / {{ $printPageCount }}</b></header>
+            <div class="print-cover-grid">
+                <div>
+                    <p class="xray-eyebrow">Critical Software X-Ray specimen</p>
+                    <h2>Payment succeeded.<br><em>Access failed.</em></h2>
+                    <p>{{ $report['metadata']['publicPromise'] }}</p>
+                </div>
+                <aside>
+                    <strong>{{ $report['metadata']['specimenLabel'] }}</strong>
+                    <ul>@foreach ($report['boundary'] as $item)<li>{{ $item }}</li>@endforeach</ul>
+                    <dl><div><dt>X-Ray</dt><dd>{{ $money($report['pricing']['xray']) }}</dd></div><div><dt>Roadmap</dt><dd>{{ $money($report['pricing']['sprint']) }}</dd></div></dl>
+                </aside>
+            </div>
+            <footer>Revenue Access Failure / Synthetic buyer specimen</footer>
+        </article>
+
+        <article class="print-page">
+            <header><span>Executive Risk Brief</span><b>Page 02 / {{ $printPageCount }}</b></header>
+            <h2>What failed, why it mattered, and what decision is required.</h2>
+            <div class="print-grid three">
+                <section><small>Incident</small><strong>{{ $report['executiveBrief']['incidentTitle'] }}</strong></section>
+                <section><small>Workflow</small><strong>{{ $report['executiveBrief']['workflow'] }}</strong></section>
+                <section><small>Consequence</small><strong>{{ $report['executiveBrief']['confirmedConsequence'] }}</strong></section>
+                <section><small>First divergence</small><strong>{{ $report['executiveBrief']['divergence'] }}</strong></section>
+                <section><small>Decision required</small><strong>{{ $report['executiveBrief']['decisionRequired'] }}</strong></section>
+                <section><small>Confidence</small><strong>{{ $report['executiveBrief']['evidenceConfidence'] }}</strong></section>
+            </div>
+            <div class="print-callout"><b>Confirmed impact:</b> {{ $report['executiveBrief']['confirmedImpact'] }}</div>
+            <div class="print-grid three">
+                <section><small>Buyer should understand</small><strong>The cash path was healthy; customer value delivery was not.</strong></section>
+                <section><small>Buyer should not infer</small><strong>This specimen does not prove real-client revenue loss or wider production exposure.</strong></section>
+                <section><small>Next decision</small><strong>Approve a scoped X-Ray before rewrite, broad retry or automation.</strong></section>
+            </div>
+            <footer>{{ $report['metadata']['specimenLabel'] }}</footer>
+        </article>
+
+        <article class="print-page">
+            <header><span>Critical-Path Map</span><b>Page 03 / {{ $printPageCount }}</b></header>
+            <h2>First proven divergence: {{ $queueStage['label'] ?? 'Queue / job' }}.</h2>
+            <div class="print-path">
+                @foreach ($report['stages'] as $stage)
+                    <section class="{{ $stage['id'] === $defaultStageId ? 'selected' : '' }}"><b>{{ $loop->iteration }}</b><strong>{{ $stage['label'] }}</strong><small>{{ $stage['status'] }}</small></section>
+                @endforeach
+            </div>
+            @if ($queueStage)
+                <div class="print-grid two">
+                    <section><small>Expected</small><strong>{{ $queueStage['expected'] }}</strong></section>
+                    <section><small>Observed</small><strong>{{ $queueStage['observed'] }}</strong></section>
+                    <section><small>Rule</small><strong>{{ $queueStage['rule'] }}</strong></section>
+                    <section><small>Risk</small><strong>{{ $queueStage['risk'] }}</strong></section>
+                </div>
+                <p class="print-evidence">{{ implode(' / ', $queueStage['evidence']) }}</p>
+            @endif
+            <div class="print-grid three">
+                <section><small>What failed</small><strong>Async fulfilment exhausted bounded attempts.</strong></section>
+                <section><small>What held</small><strong>Payment and duplicate-delivery controls preserved one business effect.</strong></section>
+                <section><small>What to avoid</small><strong>Do not blindly replay events or create replacement entitlements.</strong></section>
+            </div>
+            <footer>Expected state is compared with observed state before recommendation.</footer>
+        </article>
+
+        <article class="print-page">
+            <header><span>Expected vs Actual vs Recovered</span><b>Page 04 / {{ $printPageCount }}</b></header>
+            <h2>The issue is access-state divergence, not payment failure.</h2>
+            <table class="print-table">
+                <thead><tr><th>Stage</th><th>Expected</th><th>Incident</th><th>Recovered</th><th>Evidence</th></tr></thead>
+                <tbody>@foreach ($report['stateMatrix'] as $row)<tr><th>{{ $row['stage'] }}</th><td>{{ $row['expected'] }}</td><td>{{ $row['incident'] }}</td><td>{{ $row['recovered'] }}</td><td>{{ $row['evidence'] }}</td></tr>@endforeach</tbody>
+            </table>
+            <div class="print-grid three">
+                <section><small>Before</small><strong>Paid + active subscription + locked entitlement</strong></section>
+                <section><small>After</small><strong>Existing entitlement active once</strong></section>
+                <section><small>Remaining risk</small><strong>Wider exposure unknown outside the fixture</strong></section>
+            </div>
+            <div class="print-grid three">
+                <section><small>Rejected explanation</small><strong>Payment-provider failure is not supported by this evidence.</strong></section>
+                <section><small>Confirmed repair shape</small><strong>Update the existing entitlement, then verify repeat no-op.</strong></section>
+                <section><small>Open question</small><strong>A real X-Ray checks adjacent workflows and ownership boundaries.</strong></section>
+            </div>
+            <footer>Facts, recommendations and unknowns remain separated.</footer>
+        </article>
+
+        <article class="print-page">
+            <header><span>Evidence Timeline</span><b>Page 05 / {{ $printPageCount }}</b></header>
+            <h2>Every material claim is tied to persisted evidence.</h2>
+            <ol class="print-timeline">@foreach ($report['timeline'] as $event)<li><time>{{ \Carbon\CarbonImmutable::parse($event['at'])->format('H:i:s') }}</time><div><strong>{{ $event['fact'] }}</strong><span>{{ $event['source'] }} / {{ $event['state'] }}</span></div><b>{{ $event['evidence'] }}</b></li>@endforeach</ol>
+            <div class="print-grid three">
+                <section><small>Observed</small><strong>Payment, webhook, queue, entitlement and incident records.</strong></section>
+                <section><small>Verified</small><strong>Recovery and repeat no-op are backed by command/test design.</strong></section>
+                <section><small>Unknown</small><strong>Client-specific wider exposure is not inferred from the lab.</strong></section>
+            </div>
+            <footer>Timeline order is deterministic and validated by tests.</footer>
+        </article>
+
+        <article class="print-page">
+            <header><span>Root-Cause Decision</span><b>Page 06 / {{ $printPageCount }}</b></header>
+            <h2>{{ $report['rootCause']['proximateFailure'] }}</h2>
+            <div class="print-grid two">
+                <section><small>Underlying gap</small><strong>{{ $report['rootCause']['underlyingGap'] }}</strong></section>
+                <section><small>Why not earlier</small><strong>{{ $report['rootCause']['whyNotEarlier'] }}</strong></section>
+                <section><small>Confidence</small><strong>{{ $report['rootCause']['confidence'] }}</strong></section>
+                <section><small>Unknowns</small><strong>{{ $report['rootCause']['unknowns'] }}</strong></section>
+            </div>
+            <h3>Competing explanations considered</h3>
+            <div class="print-grid three">@foreach ($report['rootCause']['competingExplanations'] as $item)<section><small>{{ $item['evidence'] }}</small><strong>{{ $item['explanation'] }}</strong><p>{{ $item['decision'] }}</p></section>@endforeach</div>
+            <footer>Rejected explanations are documented instead of hidden.</footer>
+        </article>
+
+        <article class="print-page">
+            <header><span>Hidden Business Rule Atlas Sample</span><b>Page 07 / {{ $printPageCount }}</b></header>
+            <h2>Rules that must survive recovery, rewrite and automation.</h2>
+            <table class="print-table compact">
+                <thead><tr><th>Rule</th><th>Statement</th><th>Control</th><th>Evidence</th></tr></thead>
+                <tbody>@foreach ($report['rules'] as $rule)<tr><th>{{ $rule['id'] }}</th><td>{{ $rule['statement'] }}</td><td>{{ $rule['test'] }}</td><td>{{ $rule['evidence'] }}</td></tr>@endforeach</tbody>
+            </table>
+            <table class="print-table compact">
+                <thead><tr><th>Rule</th><th>Owner</th><th>Failure consequence</th><th>Confidence</th></tr></thead>
+                <tbody>@foreach ($report['rules'] as $rule)<tr><th>{{ $rule['id'] }}</th><td>{{ $rule['owner'] }}</td><td>{{ $rule['consequence'] }}</td><td>{{ $rule['confidence'] }}</td></tr>@endforeach</tbody>
+            </table>
+            <footer>Business rules are made explicit before broad implementation.</footer>
+        </article>
+
+        <article class="print-page">
+            <header><span>Prioritised Findings</span><b>Page 08 / {{ $printPageCount }}</b></header>
+            <h2>What must be fixed first.</h2>
+            <div class="print-findings">@foreach ($report['findings'] as $finding)<section><small>{{ $finding['severity'] }} / {{ $finding['classification'] }}</small><strong>{{ $finding['id'] }}. {{ $finding['title'] }}</strong><p>{{ $finding['consequence'] }}</p><p><b>Response:</b> {{ $finding['response'] }}</p><p><b>Urgency:</b> {{ $finding['urgency'] }}</p><p><b>Acceptance:</b> {{ $finding['acceptance'] }}</p><b>{{ implode(' / ', $finding['evidence']) }}</b></section>@endforeach</div>
+            <footer>Severity combines impact, likelihood, detectability, recoverability and evidence confidence.</footer>
+        </article>
+
+        <article class="print-page">
+            <header><span>Immediate Containment</span><b>Page 09 / {{ $printPageCount }}</b></header>
+            <h2>Contain without creating duplicate effects.</h2>
+            <div class="print-grid two">@foreach ($report['containment'] as $action)<section><small>{{ $action['owner'] }}</small><strong>{{ $action['objective'] }}</strong><p>{{ $action['action'] }}</p><b>Validation: {{ $action['validation'] }}</b></section>@endforeach</div>
+            <aside class="print-warning"><strong>Do not do yet:</strong> {{ implode(' ', $report['doNotDoYet']) }}</aside>
+            <footer>Containment is scoped before recovery is run.</footer>
+        </article>
+
+        <article class="print-page">
+            <header><span>Recovery and Rollback Plan</span><b>Page 10 / {{ $printPageCount }}</b></header>
+            <h2>{{ $report['recovery']['approvedAction'] }}</h2>
+            <div class="print-grid three">
+                <section><small>Prerequisites</small><strong>{{ $report['recovery']['prerequisites'] }}</strong></section>
+                <section><small>Boundary</small><strong>{{ $report['recovery']['boundary'] }}</strong></section>
+                <section><small>Idempotency</small><strong>{{ $report['recovery']['idempotency'] }}</strong></section>
+                <section><small>Rollback trigger</small><strong>{{ $report['recovery']['rollbackTrigger'] }}</strong></section>
+                <section><small>Rollback action</small><strong>{{ $report['recovery']['rollbackAction'] }}</strong></section>
+                <section><small>Owner</small><strong>{{ $report['recovery']['owner'] }}</strong></section>
+            </div>
+            <div class="print-grid two">
+                <section><small>Verification</small><ul>@foreach ($report['recovery']['verification'] as $item)<li>{{ $item }}</li>@endforeach</ul></section>
+                <section><small>Monitoring</small><strong>{{ $report['recovery']['monitoring'] }}</strong></section>
+            </div>
+            <footer>Rollback avoids rewriting authoritative payment evidence.</footer>
+        </article>
+
+        <article class="print-page">
+            <header><span>Verified Synthetic Outcome and Remaining Risk</span><b>Page 11 / {{ $printPageCount }}</b></header>
+            <h2>Access is restored once; wider exposure is still not invented.</h2>
+            <div class="print-grid two">@foreach ($report['verifiedOutcome'] as $outcome)<section><small>{{ $outcome['status'] }}</small><strong>{{ $outcome['claim'] }}</strong><b>{{ $outcome['evidence'] }}</b></section>@endforeach</div>
+            <div class="print-callout"><b>Remaining risk:</b> {{ $report['executiveBrief']['possibleWiderExposure'] }} {{ $report['executiveBrief']['unknowns'] }}</div>
+            <footer>Verified outcome is synthetic and scoped to the selected workflow.</footer>
+        </article>
+
+        <article class="print-page">
+            <header><span>Priced 30-Day Roadmap</span><b>Page 12 / {{ $printPageCount }}</b></header>
+            <h2>{{ $money($report['pricing']['xray']) }} X-Ray first. {{ $money($report['roadmap']['total']) }} specimen sprint if justified.</h2>
+            <div class="print-roadmap">@foreach ($report['roadmap']['phases'] as $phase)<section><small>{{ $phase['window'] }}</small><strong>{{ $phase['phase'] }}</strong><b>{{ $money($phase['price']) }}</b><p>{{ $phase['outcome'] }}</p><span><i>Deliverables:</i> {{ implode('; ', $phase['deliverables']) }}</span><span><i>Acceptance:</i> {{ $phase['acceptance'] }}</span><span><i>Buyer:</i> {{ $phase['buyerResponsibility'] }}</span></section>@endforeach</div>
+            <div class="print-callout">{{ $report['pricing']['creditWindow'] }} {{ $report['pricing']['label'] }}</div>
+            <footer>Roadmap total is validated against phase prices.</footer>
+        </article>
+
+        <article class="print-page">
+            <header><span>Assumptions, Exclusions and Buyer Responsibilities</span><b>Page 13 / {{ $printPageCount }}</b></header>
+            <h2>What is included, excluded and required.</h2>
+            <div class="print-grid three">
+                <section><small>Assumptions</small><ul>@foreach ($report['roadmap']['assumptions'] as $item)<li>{{ $item }}</li>@endforeach</ul></section>
+                <section><small>Exclusions</small><ul>@foreach ($report['roadmap']['exclusions'] as $item)<li>{{ $item }}</li>@endforeach</ul></section>
+                <section><small>Access required</small><ul>@foreach ($report['roadmap']['accessRequired'] as $item)<li>{{ $item }}</li>@endforeach</ul></section>
+            </div>
+            <div class="print-grid two">
+                <section><small>Scope-change conditions</small><ul>@foreach ($report['roadmap']['scopeChangeConditions'] as $item)<li>{{ $item }}</li>@endforeach</ul></section>
+                <section><small>Next decision</small><strong>{{ $report['roadmap']['nextDecision'] }}</strong></section>
+            </div>
+            <div class="print-callout"><b>Change control:</b> {{ $report['roadmap']['changeControl'] }} {{ $report['roadmap']['deploymentResponsibility'] }}</div>
+            <footer>Production deployment authority remains with the buyer unless separately agreed.</footer>
+        </article>
+
+        <article class="print-page">
+            <header><span>What a Real Critical Software X-Ray Delivers</span><b>Page 14 / {{ $printPageCount }}</b></header>
+            <h2>An evidence-backed decision package, not a generic PDF.</h2>
+            <div class="print-deliverables">@foreach ($report['deliverables'] as $item)<span>{{ $item }}</span>@endforeach</div>
+            <h3>Evidence register</h3>
+            <div class="print-evidence-grid">@foreach ($report['evidence'] as $item)<section><small>{{ $item['id'] }} / {{ $item['type'] }}</small><strong>{{ $item['label'] }}</strong><span>{{ $item['confidence'] }}</span></section>@endforeach</div>
+            <footer>Reusable proprietary assessment internals are intentionally redacted.</footer>
+        </article>
+
+        <article class="print-page print-final">
+            <header><span>Final CTA</span><b>Page 15 / {{ $printPageCount }}</b></header>
+            <h2>{{ $report['cta']['label'] }}</h2>
+            <p>{{ $report['cta']['supporting'] }}</p>
+            <div class="print-cta">
+                <strong>{{ $report['cta']['label'] }}</strong>
+                @if ($ctaUrl !== '#access-required')
+                    <a href="{{ $ctaUrl }}">{{ $ctaUrl }}</a>
+                @else
+                    <span>CTA destination remains configurable through TRIAGE_CTA_URL.</span>
+                @endif
+            </div>
+            <aside>
+                <b>Bring one critical workflow:</b>
+                <span>failing, fragile or too risky to change.</span>
+            </aside>
+            <footer>{{ $report['metadata']['specimenLabel'] }}</footer>
+        </article>
+    </section>
 </body>
 </html>

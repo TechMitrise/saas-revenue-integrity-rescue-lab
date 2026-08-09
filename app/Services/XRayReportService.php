@@ -30,7 +30,7 @@ class XRayReportService
         $event = $fragile->events->first();
         $entitlement = $fragile->entitlements->first();
         $attempts = $fragile->attempts->sortBy('attempt_number')->values();
-        $ctaUrl = config('rescue_lab.xray.cta_url') ?: config('rescue_lab.contact_url');
+        $ctaUrl = $this->approvedCtaUrl();
 
         $evidence = [
             ['id' => 'EV-PAYMENT', 'type' => 'observed', 'label' => 'Payment confirmation', 'source' => 'payments', 'value' => "{$payment->external_id} / {$payment->status} / USD ".number_format((float) $payment->amount), 'confidence' => 'High'],
@@ -211,12 +211,14 @@ class XRayReportService
                 'Executive readout',
             ],
             'guided' => [
-                ['title' => 'Business failure', 'summary' => 'Payment succeeded, but the customer remained locked out.', 'anchor' => 'executive-brief'],
-                ['title' => 'Critical-path divergence', 'summary' => 'The first proven divergence is bounded queue/job failure before entitlement activation.', 'anchor' => 'critical-path'],
-                ['title' => 'Evidence and root cause', 'summary' => 'Payment and webhook idempotency held; fulfilment did not close the access gap.', 'anchor' => 'root-cause'],
-                ['title' => 'Containment and recovery decision', 'summary' => 'Repair the existing entitlement under locks and verify repeat no-op.', 'anchor' => 'containment'],
-                ['title' => 'Verified outcome', 'summary' => 'Access active once, no duplicate effect, systemic risk still visible.', 'anchor' => 'verified-outcome'],
-                ['title' => 'Priced next step', 'summary' => 'Start with a $2,250 X-Ray before a $9,500 specimen sprint.', 'anchor' => 'roadmap'],
+                ['title' => 'Business failure', 'summary' => 'Payment succeeded, but customer access stayed locked beyond the entitlement SLA.', 'anchor' => 'executive-brief'],
+                ['title' => 'First proven divergence', 'summary' => 'The Queue / job stage is the first place where expected and actual state split.', 'anchor' => 'critical-path'],
+                ['title' => 'Evidence and root-cause decision', 'summary' => 'Payment and webhook replay safety held; async fulfilment failed to close the access gap.', 'anchor' => 'root-cause'],
+                ['title' => 'Safe containment', 'summary' => 'Bound the affected paid-access state and pause broad retries or manual entitlement creation.', 'anchor' => 'containment'],
+                ['title' => 'Approved recovery and rollback boundary', 'summary' => 'Repair the existing entitlement under locks, with rollback triggers defined before action.', 'anchor' => 'recovery'],
+                ['title' => 'Verified synthetic outcome', 'summary' => 'Access becomes active once; repeat recovery is no_op with zero additional effects.', 'anchor' => 'verified-outcome'],
+                ['title' => '$2,250 X-Ray and $9,500 roadmap', 'summary' => 'Buy the X-Ray first, then decide whether the four-phase 30-day rescue sprint is responsible.', 'anchor' => 'roadmap'],
+                ['title' => 'Risk Triage CTA', 'summary' => 'Bring one critical workflow that is failing, fragile or too risky to change.', 'anchor' => 'access-required'],
             ],
             'cta' => [
                 'label' => 'Request a 20-minute Critical Software Risk Triage',
@@ -349,5 +351,20 @@ class XRayReportService
         }
 
         return $milliseconds >= 60000 ? round($milliseconds / 60000).' minutes' : "{$milliseconds} ms";
+    }
+
+    private function approvedCtaUrl(): ?string
+    {
+        $url = trim((string) (config('rescue_lab.xray.cta_url') ?: config('rescue_lab.contact_url')));
+        if ($url === '') {
+            return null;
+        }
+
+        $host = parse_url($url, PHP_URL_HOST);
+        if (! is_string($host) || str_contains($host, 'example.') || str_ends_with($host, '.test')) {
+            return null;
+        }
+
+        return $url;
     }
 }

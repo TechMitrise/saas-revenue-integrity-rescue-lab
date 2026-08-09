@@ -52,7 +52,7 @@ class XRaySpecimenAccessTest extends TestCase
             ->assertHeader('X-Robots-Tag', 'noindex, nofollow')
             ->assertSee('Executive Risk Brief')
             ->assertSee('Request a 20-minute Critical Software Risk Triage')
-            ->assertSee('https://example.test/triage', false);
+            ->assertDontSee('https://example.test/triage', false);
 
         $this->post('/critical-software-xray/sample/revenue-access-failure/lock')
             ->assertRedirect('/critical-software-xray/sample/revenue-access-failure/access');

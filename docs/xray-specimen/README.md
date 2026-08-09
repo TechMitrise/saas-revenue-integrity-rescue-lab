@@ -1,6 +1,6 @@
 # Critical Software X-Ray Specimen
 
-This directory contains the protected buyer specimen for the **Critical Software X-Ray**. It turns the completed SaaS Revenue Integrity Rescue Lab incident into a professional-service sample: what TMPL examines, how evidence is separated from assumptions, where the workflow diverged, and what a priced rescue sequence would deliver.
+This directory contains Asset #2: the protected buyer specimen for the **Critical Software X-Ray**. Asset #1 remains the public SaaS Revenue Integrity Rescue Lab proof package. The specimen turns that same completed paid-but-locked incident into a professional-service sample: what TMPL examines, how evidence is separated from assumptions, where the workflow diverged, and what a priced rescue sequence would deliver.
 
 Boundary: this is a **synthetic professional-service specimen—not a client case study or production monitoring product**. It uses fictional Northstar Labs evidence from the Rescue Lab and does not claim real customer outcomes, revenue saved, legal/compliance assurance or live monitoring.
 
@@ -24,13 +24,13 @@ Add these environment values locally or in an approved isolated deployment:
 
 ```dotenv
 CRITICAL_XRAY_SPECIMEN_ENABLED=true
-CRITICAL_XRAY_ACCESS_CODE="share-a-real-code-outside-git"
-TRIAGE_CTA_URL="https://approved-booking-or-contact-url.example"
+CRITICAL_XRAY_ACCESS_CODE="private-local-code-outside-git"
+TRIAGE_CTA_URL=""
 ```
 
 The access code is never committed. The specimen is server-side protected, session-based after unlock, rate limited on access attempts, and can be locked again from the page header.
 
-If `TRIAGE_CTA_URL` is absent, the app falls back to `RESCUE_LAB_CONTACT_URL`. Do not invent a booking URL.
+If `TRIAGE_CTA_URL` is absent, the app falls back to `RESCUE_LAB_CONTACT_URL`. Placeholder hosts such as `example.test` are suppressed in the generated buyer specimen. Do not invent a booking URL.
 
 ## Local Run
 
@@ -46,22 +46,38 @@ Then set the X-Ray env values in `.env` and clear config/cache:
 ./vendor/bin/sail artisan cache:clear
 ```
 
+Open the access gate:
+
+```text
+http://localhost:18080/critical-software-xray/sample/revenue-access-failure/access
+```
+
+After unlock, use **Guided** for the three-minute buyer path and **Full report** for the complete evidence-backed specimen. The guided path covers business failure, first proven divergence, evidence/root cause, safe containment, recovery/rollback boundary, verified synthetic outcome, pricing/roadmap and the Risk Triage CTA.
+
 ## Generate Assets
 
 The capture command needs the same access code in the runtime environment:
 
 ```bash
-CRITICAL_XRAY_ACCESS_CODE="share-a-real-code-outside-git" make xray-assets
+CRITICAL_XRAY_ACCESS_CODE="private-local-code-outside-git" make xray-assets
 ```
 
 Outputs:
 
-- `docs/xray-specimen/critical-software-xray-specimen.pdf`
+- `docs/xray-specimen/critical-software-xray-specimen.pdf` (15 deliberate PDF pages)
 - `docs/xray-specimen/screenshots/01-executive-risk-brief.png`
 - `docs/xray-specimen/screenshots/02-critical-path-divergence.png`
 - `docs/xray-specimen/screenshots/03-expected-vs-actual-state.png`
 - `docs/xray-specimen/screenshots/04-recovery-rollback-decision.png`
 - `docs/xray-specimen/screenshots/05-priced-30-day-roadmap.png`
+
+For a temporary visual render of every print/PDF page, run:
+
+```bash
+docker compose exec -T -e XRAY_PRINT_PAGE_SHOTS_DIR=/var/www/html/storage/app/xray-print-pages laravel.test npm run capture:xray
+```
+
+The page renders are written under ignored `storage/app/` and are not release artifacts.
 
 ## Verification
 

@@ -28,8 +28,13 @@ test('protected X-Ray specimen unlocks, filters, links evidence and supports pri
     await expect(page).toHaveURL(new RegExp(`${route}$`));
     await expect(page.getByRole('heading', { name: /Payment succeeded/ })).toBeVisible();
     await expect(page.getByRole('heading', { name: /Synthetic professional-service specimen/ })).toBeVisible();
+    await expect(page.locator('[data-guided-step]')).toHaveCount(8);
+    await page.locator('[data-guided]').focus();
+    await page.keyboard.press('End');
+    await expect(page.locator('[data-guided-step="7"]')).toBeVisible();
+    await expect(page.locator('[data-guided-step="7"]')).toContainText('Risk Triage CTA');
 
-    await page.locator('[data-stage="queue"]').click();
+    await expect(page.locator('[data-stage="queue"]')).toHaveClass(/active/);
     await expect(page.locator('[data-stage-panel="queue"]')).toContainText('First divergence evidence');
     await expect(page.locator('[data-stage-panel="queue"]')).toContainText('3 failed attempts; deterministic timeout evidence retained.');
 
@@ -37,12 +42,14 @@ test('protected X-Ray specimen unlocks, filters, links evidence and supports pri
     await expect(page.locator('#finding-F-02')).toBeVisible();
     await expect(page.locator('#finding-F-01')).toBeHidden();
 
-    await expect(page.getByText('Paid + active subscription + locked entitlement')).toBeVisible();
-    await expect(page.getByText('Existing entitlement active once')).toBeVisible();
+    await expect(page.locator('#state-matrix').getByText('Paid + active subscription + locked entitlement')).toBeVisible();
+    await expect(page.locator('#state-matrix').getByText('Existing entitlement active once')).toBeVisible();
 
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
     expect(overflow).toBe(false);
 
     await page.emulateMedia({ media: 'print' });
     await expect(page.locator('.xray-top')).toBeHidden();
+    await expect(page.locator('.xray-print-document')).toBeVisible();
+    await expect(page.locator('.print-page')).toHaveCount(15);
 });

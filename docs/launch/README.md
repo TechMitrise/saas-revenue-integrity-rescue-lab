@@ -20,6 +20,10 @@ This directory is the operating package for launching the SaaS Revenue Integrity
 | WordPress publishing | [`WEBSITE_PROOF_COPY.md`](WEBSITE_PROOF_COPY.md) | Paste the complete proof structure with visible URL placeholders. |
 | GitHub evaluation | [`README.md`](../../README.md), [`GITHUB_LAUNCH.md`](../GITHUB_LAUNCH.md) | Help a technical buyer validate setup, scope and release evidence. |
 | Async walkthrough | [`WALKTHROUGH.md`](WALKTHROUGH.md), `make video` | Send the 105-second proof or record a narrated version. |
+| Evidence screenshots | [`SCREENSHOT_INDEX.md`](SCREENSHOT_INDEX.md) | Use the generated application frames without cropping out synthetic disclosure. |
+| Scenario study | [`SCENARIO_STUDY.md`](../SCENARIO_STUDY.md) | Explain the fictional business context, evidence inspected and verified Lab result. |
+| X-Ray sample | [`CRITICAL_SOFTWARE_XRAY_SAMPLE.md`](../CRITICAL_SOFTWARE_XRAY_SAMPLE.md) | Show what a paid diagnostic would provide using the Lab evidence standard. |
+| Three-minute path | [`THREE_MINUTE_SALES_DEMO.md`](../THREE_MINUTE_SALES_DEMO.md) | Run the short sales demo and transition to the paid X-Ray. |
 | Live call | [`DEMO_CALL_RUNBOOK.md`](DEMO_CALL_RUNBOOK.md) | Run discovery, proof, relevance mapping and close. |
 | Objections | [`OBJECTION_HANDLING.md`](OBJECTION_HANDLING.md) | Answer scope, synthetic-data, rewrite and exactly-once concerns accurately. |
 | Paid entry offer | [`AUDIT_OFFER.md`](AUDIT_OFFER.md) | Explain who the audit is for, what ships and what is excluded. |

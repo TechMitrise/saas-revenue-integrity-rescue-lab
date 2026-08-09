@@ -131,8 +131,12 @@ class PaidAccessRescueTest extends TestCase
         $this->assertSame(1, $first->business_effects);
         $this->assertSame('locked', $first->before_state['entitlement_state']);
         $this->assertSame('active', $first->after_state['entitlement_state']);
+        $this->assertSame(0, $first->before_state['business_effects']);
+        $this->assertSame(1, $first->after_state['business_effects']);
         $this->assertSame('no_op', $second->result);
         $this->assertSame(0, $second->business_effects);
+        $this->assertSame(1, $second->before_state['business_effects']);
+        $this->assertSame(1, $second->after_state['business_effects']);
         $this->assertSame(1, $second->after_state['entitlement_count']);
         $this->assertSame(1, (int) ReconciliationAction::query()->sum('business_effects'));
         $this->assertSame(1, Entitlement::query()->where('subscription_id', $incident->subscription_id)->count());

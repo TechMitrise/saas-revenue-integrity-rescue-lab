@@ -13,7 +13,9 @@
 /.vscode
 /.zed
 /auth.json
-/artifacts
+/artifacts/*
+!/artifacts/rescue-lab-poster.png
+!/artifacts/rescue-lab-prospect-demo.mp4
 /node_modules
 /public/build
 /public/fonts-manifest.dev.json

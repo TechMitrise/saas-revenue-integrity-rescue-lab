@@ -38,7 +38,7 @@ class ReconciliationService
                 $reason = 'Locked reconciliation activated the existing entitlement without creating a duplicate.';
             }
 
-            $after = $this->snapshot($incident->fresh(), $entitlement->fresh(), $run->fresh());
+            $after = $this->snapshot($incident->fresh(), $entitlement->fresh(), $run->fresh(), $businessEffects);
             $action = ReconciliationAction::query()->create([
                 'workspace_id' => $incident->workspace_id,
                 'lab_run_id' => $run->id,
@@ -71,7 +71,7 @@ class ReconciliationService
     }
 
     /** @return array<string, mixed> */
-    private function snapshot(Incident $incident, Entitlement $entitlement, LabRun $run): array
+    private function snapshot(Incident $incident, Entitlement $entitlement, LabRun $run, int $pendingBusinessEffects = 0): array
     {
         return [
             'incident_status' => $incident->status,
@@ -83,7 +83,7 @@ class ReconciliationService
                 ->count(),
             'business_effects' => ReconciliationAction::query()
                 ->where('lab_run_id', $run->id)
-                ->sum('business_effects'),
+                ->sum('business_effects') + $pendingBusinessEffects,
         ];
     }
 }

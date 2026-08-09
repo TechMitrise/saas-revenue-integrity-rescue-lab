@@ -11,6 +11,8 @@
 
 Rescue Lab is a working Laravel demonstration of a revenue-critical SaaS failure: a synthetic customer pays successfully, the provider delivers the same webhook repeatedly, and a queued entitlement job exhausts bounded retries. Access remains locked beyond its SLA until a transactionally safe reconciliation restores it. A second reconciliation is retained as a verified no-op.
 
+Start with the 105-second walkthrough at [`artifacts/rescue-lab-prospect-demo.mp4`](artifacts/rescue-lab-prospect-demo.mp4), then inspect the five core evidence screenshots in [`public/images/proof`](public/images/proof). Technical reviewers can reproduce the same path locally with `make demo`, `make simulate`, `make reconcile`, `make screenshots`, `make video`, and `make test`.
+
 ## Tech Mitrise rescue method
 
 The lab makes one legacy-modernisation method inspectable:
@@ -72,6 +74,21 @@ Start with **Guided live incident** above the evidence tabs. Its eight controls 
 5. **Fragile vs Stabilised:** compare the same synthetic scenario with and without signature, inbox, idempotency, uniqueness, retry, and reconciliation controls.
 6. **Engineering Evidence:** resolve product claims to tests, architecture, commands, and the runbook.
 
+## Buyer proof package
+
+| Asset | Location | Purpose |
+| --- | --- | --- |
+| Walkthrough MP4 | [`artifacts/rescue-lab-prospect-demo.mp4`](artifacts/rescue-lab-prospect-demo.mp4) | Captioned 105-second failure-to-recovery proof. |
+| Narration script | [`docs/launch/WALKTHROUGH.md`](docs/launch/WALKTHROUGH.md) | Human voice-over script and shot list for the same MP4. |
+| Screenshot index | [`docs/launch/SCREENSHOT_INDEX.md`](docs/launch/SCREENSHOT_INDEX.md) | Captions and links for the six 1440 x 900 application frames. |
+| Core screenshots | [`01`](public/images/proof/01-rescue-control-room.png), [`02`](public/images/proof/02-customer-incident-timeline.png), [`03`](public/images/proof/03-root-cause-evidence.png), [`04`](public/images/proof/04-safe-recovery-before-after.png), [`05`](public/images/proof/05-repeat-no-op-proof.png) | Required evidence sequence: paid-but-locked, trace, divergence, recovery and no-op. |
+| Scenario study | [`docs/SCENARIO_STUDY.md`](docs/SCENARIO_STUDY.md) | Synthetic business context, evidence, diagnosis, intervention and verified result. |
+| Critical Software X-Ray sample | [`docs/CRITICAL_SOFTWARE_XRAY_SAMPLE.md`](docs/CRITICAL_SOFTWARE_XRAY_SAMPLE.md) | Compact paid-diagnostic sample derived from the Lab evidence. |
+| Three-minute sales path | [`docs/THREE_MINUTE_SALES_DEMO.md`](docs/THREE_MINUTE_SALES_DEMO.md) | Internal demo script, qualification questions and Audit transition. |
+| Architecture | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Critical revenue path, constraints, queue and reconciliation design. |
+| Runbook | [`docs/OPERATIONS.md`](docs/OPERATIONS.md) | Local startup, scenario operations, recovery, rollback and release checks. |
+| Release audit | [`docs/RELEASE_AUDIT.md`](docs/RELEASE_AUDIT.md) | Verification commands, results and release boundary. |
+
 ## Scenario commands
 
 ```bash
@@ -118,6 +135,9 @@ The mandatory tests are in [`tests/Feature/PaidAccessRescueTest.php`](tests/Feat
 
 - [Architecture](docs/ARCHITECTURE.md) documents event ingestion, queue processing, constraints, tenancy, detection, and reconciliation.
 - [Operations](docs/OPERATIONS.md) is the setup, deployment, rollback, failed-job, reconciliation, and incident-response runbook.
+- [Synthetic scenario study](docs/SCENARIO_STUDY.md) explains the fictional business context, evidence inspected, diagnosis, intervention and verified result.
+- [Critical Software X-Ray sample](docs/CRITICAL_SOFTWARE_XRAY_SAMPLE.md) shows the compact paid-diagnostic output derived from the lab evidence.
+- [Three-minute sales demonstration path](docs/THREE_MINUTE_SALES_DEMO.md) gives the internal short-demo script and qualification questions.
 - [Prospect demo](docs/PROSPECT_DEMO.md) provides an accurate five-minute walkthrough.
 - [Current state](docs/CURRENT_STATE.md) states what is implemented and what remains outside the lab boundary.
 - [Release audit](docs/RELEASE_AUDIT.md) records the observed public release-candidate checks and external deployment boundary.

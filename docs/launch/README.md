@@ -19,7 +19,7 @@ This directory is the operating package for launching the SaaS Revenue Integrity
 | Public discovery | [`/proof`](../../resources/views/proof.blade.php) | Establish business relevance and engineering credibility. |
 | WordPress publishing | [`WEBSITE_PROOF_COPY.md`](WEBSITE_PROOF_COPY.md) | Paste the complete proof structure with visible URL placeholders. |
 | GitHub evaluation | [`README.md`](../../README.md), [`GITHUB_LAUNCH.md`](../GITHUB_LAUNCH.md) | Help a technical buyer validate setup, scope and release evidence. |
-| Async walkthrough | [`WALKTHROUGH.md`](WALKTHROUGH.md), `make video` | Send the 105-second proof or record a narrated version. |
+| Async walkthrough | [`WALKTHROUGH.md`](WALKTHROUGH.md), `make video` | Send the 107-second proof or record a narrated version. |
 | Evidence screenshots | [`SCREENSHOT_INDEX.md`](SCREENSHOT_INDEX.md) | Use the generated application frames without cropping out synthetic disclosure. |
 | Scenario study | [`SCENARIO_STUDY.md`](../SCENARIO_STUDY.md) | Explain the fictional business context, evidence inspected and verified Lab result. |
 | X-Ray sample | [`CRITICAL_SOFTWARE_XRAY_SAMPLE.md`](../CRITICAL_SOFTWARE_XRAY_SAMPLE.md) | Show what a paid diagnostic would provide using the Lab evidence standard. |
@@ -44,7 +44,7 @@ This directory is the operating package for launching the SaaS Revenue Integrity
 4. Push `main`, wait for both hosted CI jobs, then publish the release and social preview.
 5. Deploy `/proof` in read-only mode first. Enable synthetic demo mutations only on an isolated lab.
 6. Configure `RESCUE_LAB_REPOSITORY_URL` and `RESCUE_LAB_CONTACT_URL` on the approved host.
-7. Send the 105-second walkthrough before a call, not the proposal.
+7. Send the 107-second walkthrough before a call, not the proposal.
 8. Use the call to diagnose relevance, demonstrate evidence and offer the Audit only when fit is confirmed.
 
 ## Freeze rule

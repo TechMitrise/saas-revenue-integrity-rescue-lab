@@ -61,7 +61,7 @@ Ask:
 > Is there one path important enough to put through that audit now?
 
 If yes: send the intake and schedule a scope call with engineering and revenue owners.  
-If unclear: send the 105-second walkthrough and ask for one sanitized incident summary.  
+If unclear: send the 107-second walkthrough and ask for one sanitized incident summary.
 If no fit: close without forcing a broad consulting pitch.
 
 ## What not to diagnose for free

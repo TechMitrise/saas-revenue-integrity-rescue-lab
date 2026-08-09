@@ -11,7 +11,7 @@
 
 Rescue Lab is a working Laravel demonstration of a revenue-critical SaaS failure: a synthetic customer pays successfully, the provider delivers the same webhook repeatedly, and a queued entitlement job exhausts bounded retries. Access remains locked beyond its SLA until a transactionally safe reconciliation restores it. A second reconciliation is retained as a verified no-op.
 
-Start with the 105-second walkthrough at [`artifacts/rescue-lab-prospect-demo.mp4`](artifacts/rescue-lab-prospect-demo.mp4), then inspect the five core evidence screenshots in [`public/images/proof`](public/images/proof). Technical reviewers can reproduce the same path locally with `make demo`, `make simulate`, `make reconcile`, `make screenshots`, `make video`, and `make test`.
+Start with the 107-second walkthrough at [`artifacts/rescue-lab-prospect-demo.mp4`](artifacts/rescue-lab-prospect-demo.mp4), then inspect the six core evidence screenshots in [`public/images/proof`](public/images/proof). Technical reviewers can reproduce the same path locally with `make demo`, `make simulate`, `make reconcile`, `make screenshots`, `make video`, `make xray-assets`, and `make test`.
 
 ## Tech Mitrise rescue method
 
@@ -78,12 +78,13 @@ Start with **Guided live incident** above the evidence tabs. Its eight controls 
 
 | Asset | Location | Purpose |
 | --- | --- | --- |
-| Walkthrough MP4 | [`artifacts/rescue-lab-prospect-demo.mp4`](artifacts/rescue-lab-prospect-demo.mp4) | Captioned 105-second failure-to-recovery proof. |
+| Walkthrough MP4 | [`artifacts/rescue-lab-prospect-demo.mp4`](artifacts/rescue-lab-prospect-demo.mp4) | Captioned 107-second failure-to-recovery proof. |
 | Narration script | [`docs/launch/WALKTHROUGH.md`](docs/launch/WALKTHROUGH.md) | Human voice-over script and shot list for the same MP4. |
 | Screenshot index | [`docs/launch/SCREENSHOT_INDEX.md`](docs/launch/SCREENSHOT_INDEX.md) | Captions and links for the six 1440 x 900 application frames. |
 | Core screenshots | [`01`](public/images/proof/01-rescue-control-room.png), [`02`](public/images/proof/02-customer-incident-timeline.png), [`03`](public/images/proof/03-root-cause-evidence.png), [`04`](public/images/proof/04-safe-recovery-before-after.png), [`05`](public/images/proof/05-repeat-no-op-proof.png) | Required evidence sequence: paid-but-locked, trace, divergence, recovery and no-op. |
 | Scenario study | [`docs/SCENARIO_STUDY.md`](docs/SCENARIO_STUDY.md) | Synthetic business context, evidence, diagnosis, intervention and verified result. |
 | Critical Software X-Ray sample | [`docs/CRITICAL_SOFTWARE_XRAY_SAMPLE.md`](docs/CRITICAL_SOFTWARE_XRAY_SAMPLE.md) | Compact paid-diagnostic sample derived from the Lab evidence. |
+| Protected X-Ray specimen | [`docs/xray-specimen/README.md`](docs/xray-specimen/README.md) | Interactive buyer specimen for the paid Critical Software X-Ray. |
 | Three-minute sales path | [`docs/THREE_MINUTE_SALES_DEMO.md`](docs/THREE_MINUTE_SALES_DEMO.md) | Internal demo script, qualification questions and Audit transition. |
 | Architecture | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Critical revenue path, constraints, queue and reconciliation design. |
 | Runbook | [`docs/OPERATIONS.md`](docs/OPERATIONS.md) | Local startup, scenario operations, recovery, rollback and release checks. |
@@ -99,6 +100,7 @@ make test       # run the complete local quality gate
 make video      # create a narrated-caption prospect MP4 and poster in artifacts/
 make screenshots # regenerate six 1440 x 900 application proof frames
 make proof-assets # regenerate screenshots, README image and social preview
+make xray-assets # regenerate the protected X-Ray specimen PDF and five screenshots
 ```
 
 Equivalent Artisan commands are `lab:simulate`, `lab:reset`, and `lab:reconcile --verify-no-op`.
@@ -129,7 +131,7 @@ Equivalent Artisan commands are `lab:simulate`, `lab:reset`, and `lab:reconcile 
 ./vendor/bin/sail npm audit --audit-level=low
 ```
 
-The mandatory tests are in [`tests/Feature/PaidAccessRescueTest.php`](tests/Feature/PaidAccessRescueTest.php), [`tests/Unit/RevenueIntegrityAuditorTest.php`](tests/Unit/RevenueIntegrityAuditorTest.php), and [`tests/Browser/revenue-rescue.spec.js`](tests/Browser/revenue-rescue.spec.js). GitHub Actions repeats the same release gates in [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+The mandatory tests are in [`tests/Feature/PaidAccessRescueTest.php`](tests/Feature/PaidAccessRescueTest.php), [`tests/Feature/XRaySpecimenAccessTest.php`](tests/Feature/XRaySpecimenAccessTest.php), [`tests/Unit/RevenueIntegrityAuditorTest.php`](tests/Unit/RevenueIntegrityAuditorTest.php), [`tests/Unit/XRayReportServiceTest.php`](tests/Unit/XRayReportServiceTest.php), [`tests/Browser/revenue-rescue.spec.js`](tests/Browser/revenue-rescue.spec.js), and [`tests/Browser/xray-specimen.spec.js`](tests/Browser/xray-specimen.spec.js). GitHub Actions repeats the same release gates in [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
 ## Architecture and operations
 
@@ -137,6 +139,7 @@ The mandatory tests are in [`tests/Feature/PaidAccessRescueTest.php`](tests/Feat
 - [Operations](docs/OPERATIONS.md) is the setup, deployment, rollback, failed-job, reconciliation, and incident-response runbook.
 - [Synthetic scenario study](docs/SCENARIO_STUDY.md) explains the fictional business context, evidence inspected, diagnosis, intervention and verified result.
 - [Critical Software X-Ray sample](docs/CRITICAL_SOFTWARE_XRAY_SAMPLE.md) shows the compact paid-diagnostic output derived from the lab evidence.
+- [Protected Critical Software X-Ray specimen](docs/xray-specimen/README.md) documents the interactive buyer specimen, access setup, PDF/screenshots and deployment boundary.
 - [Three-minute sales demonstration path](docs/THREE_MINUTE_SALES_DEMO.md) gives the internal short-demo script and qualification questions.
 - [Prospect demo](docs/PROSPECT_DEMO.md) provides an accurate five-minute walkthrough.
 - [Current state](docs/CURRENT_STATE.md) states what is implemented and what remains outside the lab boundary.
@@ -158,3 +161,17 @@ The project is available under the [MIT License](LICENSE). See [CONTRIBUTING.md]
 - Set `RESCUE_LAB_DEMO_MUTATIONS_ENABLED=true` only for an isolated synthetic demonstration, never against production customer data.
 - A production deployment still requires approved infrastructure, secrets, TLS, monitoring, backups, and an operator access policy.
 - No deployment, remote push, or external service configuration is performed by this repository.
+
+## Protected Critical Software X-Ray specimen
+
+The route `/critical-software-xray/sample/revenue-access-failure` presents a protected interactive specimen for the paid **Critical Software X-Ray**. It uses the same synthetic paid-but-locked incident to show observed facts, engineering interpretation, risks, containment, recovery/rollback and an illustrative priced 30-day rescue roadmap.
+
+Enable it only when intentionally sharing the specimen:
+
+```dotenv
+CRITICAL_XRAY_SPECIMEN_ENABLED=true
+CRITICAL_XRAY_ACCESS_CODE="set-outside-git"
+TRIAGE_CTA_URL="https://approved-contact-or-booking-url.example"
+```
+
+The access gate is server-side, session-based, rate limited and noindexed. See [`docs/xray-specimen/README.md`](docs/xray-specimen/README.md) for setup, access sharing, print/PDF generation, screenshots, deployment and rollback notes.

@@ -21,11 +21,11 @@ Mohit
 
 ## Walkthrough before a call
 
-Subject: `105-second Laravel revenue-path proof`
+Subject: `107-second Laravel revenue-path proof`
 
 Hi `[NAME]`,
 
-You mentioned `[OBSERVABLE TRIGGER]`. This 105-second synthetic walkthrough shows the specific method I would use to investigate it without assuming the cause: `[INSERT VIDEO URL]`.
+You mentioned `[OBSERVABLE TRIGGER]`. This 107-second synthetic walkthrough shows the specific method I would use to investigate it without assuming the cause: `[INSERT VIDEO URL]`.
 
 If the payment-to-value path is currently important, I can walk through the evidence and determine whether a fixed-scope Audit fits. No credentials or production data are needed for that call.
 

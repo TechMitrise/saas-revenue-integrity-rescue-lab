@@ -9,6 +9,12 @@ return [
     'repository_url' => env('RESCUE_LAB_REPOSITORY_URL'),
     'contact_url' => env('RESCUE_LAB_CONTACT_URL'),
     'video_url' => env('RESCUE_LAB_VIDEO_URL'),
+    'xray' => [
+        'enabled' => filter_var(env('CRITICAL_XRAY_SPECIMEN_ENABLED', false), FILTER_VALIDATE_BOOL),
+        'access_code' => env('CRITICAL_XRAY_ACCESS_CODE'),
+        'session_key' => 'critical_xray_specimen_unlocked',
+        'cta_url' => env('TRIAGE_CTA_URL') ?: env('RESCUE_LAB_CONTACT_URL'),
+    ],
     'demo_mutations_enabled' => filter_var(
         env('RESCUE_LAB_DEMO_MUTATIONS_ENABLED', in_array(env('APP_ENV', 'production'), ['local', 'testing'], true)),
         FILTER_VALIDATE_BOOL,

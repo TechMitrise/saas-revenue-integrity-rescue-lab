@@ -6,6 +6,7 @@
         "build": "vite build",
         "capture:demo-screenshots": "node scripts/capture-demo-screenshots.mjs",
         "capture:proof": "node scripts/capture-proof-assets.mjs",
+        "capture:xray": "node scripts/capture-xray-specimen.mjs",
         "dev": "vite",
         "record:demo": "node scripts/record-prospect-demo.mjs",
         "test:e2e": "playwright test"

@@ -21,9 +21,10 @@ This audit covers the synthetic SaaS Revenue Integrity Rescue Lab only. No real 
 | Prospect walkthrough | PASS | `make video` generated `artifacts/rescue-lab-prospect-demo.mp4`: H.264, 1440 x 900, 25 fps, 107.4 seconds |
 | Evidence-backed scenario study | PASS | `docs/SCENARIO_STUDY.md` derives fictional context, consequence, evidence, diagnosis and code/test references from the Lab |
 | Critical Software X-Ray sample | PASS | `docs/CRITICAL_SOFTWARE_XRAY_SAMPLE.md` maps expected-versus-actual state, evidence timeline, risk ranking, containment and 30-day roadmap |
+| Protected X-Ray buyer specimen | PASS | `/critical-software-xray/sample/revenue-access-failure`, `docs/xray-specimen/critical-software-xray-specimen.pdf`, five generated screenshots, server-side access gate and noindex controls |
 | Three-minute sales path | PASS | `docs/THREE_MINUTE_SALES_DEMO.md` gives exact screens, narration, qualification questions and paid X-Ray transition |
 | Proof index | PASS | README links walkthrough MP4, narration script, screenshots, scenario study, X-Ray sample, sales path, architecture, runbook and release audit |
-| Automated tests | PASS | 20 PHP tests / 152 assertions and 3 Playwright journeys across both desktop and mobile projects |
+| Automated tests | PASS | 29 PHP tests / 232 assertions and 4 Playwright journeys across both desktop and mobile projects |
 | One-command setup | PASS | Repeated `make demo`; dependency and browser caches reused; application key hash unchanged |
 | Launch assets | PASS | `make proof-assets` reproducibly builds the README screenshot and 1280 x 640 social preview |
 | CI | PARTIAL | `.github/workflows/ci.yml` defines backend, security, build, MySQL, and browser jobs. Local-equivalent commands pass; hosted GitHub execution awaits the intentionally deferred push |
@@ -37,10 +38,11 @@ This audit covers the synthetic SaaS Revenue Integrity Rescue Lab only. No real 
 make demo                                           PASS (initial and repeat)
 make test                                           PASS
 make proof-assets                                   PASS
+make xray-assets                                    PASS: protected specimen PDF and five deterministic screenshot frames
 make screenshots                                    PASS: 6 deterministic proof frames
 make video                                          PASS: 107.4-second H.264 walkthrough, fixture reset
-./vendor/bin/sail test                              PASS: 20 tests, 152 assertions
-./vendor/bin/sail npm run test:e2e                  PASS: 6 tests across 2 projects
+./vendor/bin/sail test                              PASS: 29 tests, 232 assertions
+./vendor/bin/sail npm run test:e2e                  PASS: 8 tests across 2 projects
 ./vendor/bin/sail artisan lab:simulate              PASS: fragile 10/1/3/locked/SLA; stabilised 10/1/0/active/no SLA
 ./vendor/bin/sail artisan lab:reconcile --verify-no-op
                                                     PASS: repaired/1 effect; no_op/0 effects

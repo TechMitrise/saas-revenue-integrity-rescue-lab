@@ -81,18 +81,18 @@
                 <div><strong>10 &#8594; 1 &#8594; 1</strong><span>Deliveries / event / effect</span></div>
                 <div><strong>3 / 3</strong><span>Persisted queue failures</span></div>
                 <div><strong>1 + 0</strong><span>Repair / repeat effects</span></div>
-                <div><strong>148</strong><span>PHP assertions passing</span></div>
-                <div><strong>6</strong><span>Desktop + mobile journeys</span></div>
+                <div><strong>232</strong><span>PHP assertions passing</span></div>
+                <div><strong>8</strong><span>Desktop + mobile journeys</span></div>
             </div>
         </section>
 
         <section class="walkthrough-section proof-width" id="walkthrough">
             <div class="section-intro split-intro">
-                <div><p class="proof-eyebrow">105-second walkthrough</p><h2>See the business failure.<br><em>Then inspect the rescue.</em></h2></div>
+                <div><p class="proof-eyebrow">107-second walkthrough</p><h2>See the business failure.<br><em>Then inspect the rescue.</em></h2></div>
                 <p>Payment succeeds, one signed event arrives ten times, queued provisioning fails, the access SLA is breached, and lock-protected reconciliation repairs the existing entitlement once.</p>
             </div>
             <a class="video-frame" href="{{ $videoUrl ?: ($liveDemoAvailable ? route('dashboard') : '#screenshots') }}" @if ($videoUrl) rel="noopener" @endif>
-                <div><span class="video-play" aria-hidden="true">&#9654;</span><p class="proof-eyebrow">Human walkthrough / 01:45</p><strong>{{ $videoUrl ? 'Watch the complete rescue' : 'Walkthrough URL configured at launch' }}</strong><small>{{ $videoUrl ? 'Business impact first. Technical evidence second.' : 'The live lab and six evidence frames remain available below.' }}</small></div>
+                <div><span class="video-play" aria-hidden="true">&#9654;</span><p class="proof-eyebrow">Human walkthrough / 01:47</p><strong>{{ $videoUrl ? 'Watch the complete rescue' : 'Walkthrough URL configured at launch' }}</strong><small>{{ $videoUrl ? 'Business impact first. Technical evidence second.' : 'The live lab and six evidence frames remain available below.' }}</small></div>
                 <code>detect &#8594; trace &#8594; quantify &#8594; recover &#8594; prevent</code>
             </a>
         </section>

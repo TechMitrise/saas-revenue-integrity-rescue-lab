@@ -3,3 +3,4 @@ Allow: /proof
 Disallow: /app
 Disallow: /login
 Disallow: /api/
+Disallow: /critical-software-xray/

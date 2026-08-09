@@ -8,11 +8,20 @@ use App\Http\Controllers\Api\ReconciliationController;
 use App\Http\Controllers\Api\WebhookController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\XRayAccessController;
+use App\Http\Controllers\XRaySpecimenController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/proof');
 Route::view('/proof', 'proof')->name('proof');
 Route::post('/api/webhooks/synthetic-pay', [WebhookController::class, 'store'])->middleware('demo.mutations');
+
+Route::prefix('critical-software-xray/sample/revenue-access-failure')->group(function (): void {
+    Route::get('/access', [XRayAccessController::class, 'create'])->name('xray.access');
+    Route::post('/access', [XRayAccessController::class, 'store'])->middleware('throttle:20,1')->name('xray.access.store');
+    Route::post('/lock', [XRayAccessController::class, 'destroy'])->name('xray.lock');
+    Route::get('/', XRaySpecimenController::class)->name('xray.sample');
+});
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [AuthController::class, 'create'])->name('login');

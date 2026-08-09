@@ -1,4 +1,4 @@
-.PHONY: demo reset simulate reconcile test video screenshots proof-assets
+.PHONY: demo reset simulate reconcile test video screenshots proof-assets xray-assets
 
 .env:
 	cp .env.example .env
@@ -42,3 +42,8 @@ screenshots:
 
 proof-assets: screenshots
 	./vendor/bin/sail npm run capture:proof
+
+xray-assets:
+	./vendor/bin/sail npm run build
+	./vendor/bin/sail artisan cache:clear
+	./vendor/bin/sail npm run capture:xray

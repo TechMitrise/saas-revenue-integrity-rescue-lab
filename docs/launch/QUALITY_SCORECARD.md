@@ -15,7 +15,7 @@ Focused corrections:
 
 - changed the hero to "Payment succeeded. Access failed.";
 - made **Request a Legacy SaaS Risk Triage** the single primary CTA;
-- added the 105-second walkthrough, six-frame gallery, buyer fit and USD 1,500-3,000 Audit;
+- added the 107-second walkthrough, six-frame gallery, buyer fit and USD 1,500-3,000 Audit;
 - hid transient capture UI and reset before the final comparison;
 - re-rendered and visually inspected desktop, mobile and all six application frames;
 - kept every client URL, testimonial and production outcome as a placeholder or explicit exclusion.

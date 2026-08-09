@@ -66,7 +66,7 @@ Signatures are verified, deliveries and logical events are separated, unique ide
 
 ## 7. Engineering evidence
 
-The proof is backed by Laravel 13, PHP 8.5, MySQL 8.4, Valkey/Horizon, database uniqueness constraints, immutable reconciliation records, 148 PHP assertions and desktop/mobile Playwright journeys.
+The proof is backed by Laravel 13, PHP 8.5, MySQL 8.4, Valkey/Horizon, database uniqueness constraints, immutable reconciliation records, 232 PHP assertions and desktop/mobile Playwright journeys.
 
 **Technical source:** `https://github.com/TechMitrise/saas-revenue-integrity-rescue-lab`
 
